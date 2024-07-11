@@ -67,6 +67,9 @@ main {
   ba
   color: rgb(11, 26, 162); */
 }
+.inin {
+  font-weight: bold;
+}
 
 header {
   color: #ffffff;
@@ -89,12 +92,25 @@ header {
 .img_index {
   width: 50px;
   margin-left: 10px;
+  /* position: relative;
+  right: 10px; */
+}
+.input__text {
+  width: 60px;
+  margin-left: 10px;
 }
 label {
   font-size: 14px;
   color: white !important;
   /* color: rgb(97, 97, 97); */
 }
+input::placeholder {
+  font-size: 14px;
+}
+.input__text::placeholder {
+  font-size: 12px;
+}
+
 .errorMsg {
   color: red;
   position: relative;
@@ -131,6 +147,9 @@ footer > h3 {
   color: white;
   text-decoration: none;
   padding-left: 10px;
+}
+.conf__agenda {
+  color: white;
 }
 @media (max-width: 765px) {
   .form__main {

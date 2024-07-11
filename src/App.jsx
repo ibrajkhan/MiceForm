@@ -55,14 +55,16 @@ const App = () => {
   } = useForm({
     defaultValues: {},
   });
+
   const watchAllFields = watch();
 
   const addDestination = (e) => {
-    if (e.target.id === "country") {
-      setCountry(() => {
-        return [...country, 1];
+    if (e.target.id === "city") {
+      setCity(() => {
+        return [...city, 1];
       });
     }
+    e;
   };
 
   useEffect(() => {
@@ -191,6 +193,35 @@ const App = () => {
     value: city.toLowerCase().replace(/ /g, "-"),
     label: city,
   }));
+  const startDate = new Date(watchAllFields.conferenceStartDate);
+
+  const areaInMeter = watchAllFields.conferenceArea * 0.092903;
+
+  // conversion of sq. ft to meter sq and vise versa
+
+  const conversionFactor = 0.092903;
+
+  const squareFeet = watch("squareFeet");
+  const squareMeters = watch("squareMeters");
+
+  const handleSquareFeetChange = (value) => {
+    if (value === "") {
+      setValue("squareMeters", "");
+    } else {
+      const convertedValue = parseFloat(value) * conversionFactor;
+      setValue("squareMeters", convertedValue);
+    }
+  };
+
+  const handleSquareMetersChange = (value) => {
+    if (value === "") {
+      setValue("squareFeet", "");
+    } else {
+      const convertedValue = parseFloat(value) / conversionFactor;
+      setValue("squareFeet", convertedValue);
+    }
+  };
+
   const options = [
     "Travel bookings",
     "Hotel & End to End Arrangements",
@@ -223,6 +254,10 @@ const App = () => {
   const handleCityChange = (event) => {
     setSelectedCity(event.target.value);
   };
+  const agenda__number = Array.from(
+    { length: parseInt(watchAllFields.duration) },
+    (_, i) => i
+  );
 
   const onSubmit = (data) => {
     if (
@@ -250,7 +285,6 @@ const App = () => {
       CheckBoxHotelArrangements: data.hotelArrangements,
       CheckBoxEvent: data.event,
       CheckBoxConference: data.conferences,
-
       TravelBookingType: data.travelBookingType,
       TotaxPax: data.totalPax,
       DepartureCity: data.departureCity,
@@ -637,7 +671,7 @@ const App = () => {
                     </Col>
                     <Col md={6}>
                       <div className="input__container">
-                        <label>City</label>
+                        <label>City 1</label>
 
                         <Controller
                           name="state"
@@ -656,11 +690,11 @@ const App = () => {
                         />
                       </div>
                     </Col>
-                    {/* 
+
                     {city.map((item, index) => (
                       <Col md={6} key={index}>
                         <div className="input__container mt-2">
-                          <label>City &nbsp; {index + 1}</label>
+                          <label>City {index + 2}</label>
                           <Controller
                             name={`state-${index}`}
                             control={control}
@@ -678,19 +712,22 @@ const App = () => {
                           />
                         </div>
                       </Col>
-                    ))} */}
+                    ))}
 
-                    <Col md={12}>
-                      {/* <Button
-                        variant="primary"
-                        id="city"
-                        className="mt-3"
-                        size="sm"
-                        onClick={(e) => addDestination(e)}>
-                        Add City
-                      </Button> */}
+                    <Row>
+                      <Col md={3}>
+                        <Button
+                          variant="primary"
+                          id="city"
+                          className="mt-3"
+                          size="sm"
+                          onClick={(e) => addDestination(e)}>
+                          Add City
+                        </Button>
+                      </Col>
+                    </Row>
 
-                      {country.map((item, index) => (
+                    {/* {country.map((item, index) => (
                         <Row className="row__container" key={index}>
                           <Col md={6}>
                             <div className="input__container">
@@ -721,8 +758,7 @@ const App = () => {
                               )}
                             </div>
                           </Col>
-                          {/* {city.map((item, index) => { */}
-                          {}
+
                           <Col md={6}>
                             <div className="input__container">
                               <label>City</label>
@@ -754,8 +790,7 @@ const App = () => {
                         size="sm"
                         onClick={(e) => addDestination(e)}>
                         Add Country
-                      </Button>
-                    </Col>
+                      </Button> */}
                   </Row>
                 }
               </>
@@ -861,7 +896,7 @@ const App = () => {
                   </label>
                 </div>
               </Col>
-              <Col md={4}>
+              {/* <Col md={4}>
                 <div style={{ marginTop: "10px", padding: "5px" }}>
                   <Controller
                     name="conferences"
@@ -880,7 +915,7 @@ const App = () => {
                     Conference Requirements
                   </label>
                 </div>
-              </Col>
+              </Col> */}
 
               {/* <Col md={4}>
                 <div style={{ marginTop: "10px", padding: "5px" }}>
@@ -906,7 +941,6 @@ const App = () => {
               {isSubmitClicked &&
               !watchAllFields.travelBooking &&
               !watchAllFields.hotelArrangements &&
-              !watchAllFields.conferences &&
               !watchAllFields.event ? (
                 <>
                   <br />
@@ -1182,17 +1216,17 @@ const App = () => {
                       </label>
                       <input
                         type="text"
-                        id="duration"
-                        placeholder="duration"
+                        id="hotelDuration"
+                        placeholder="Duration. ex 5 nights "
                         className="input-element"
                         name="duration"
-                        {...register("duration", {
+                        {...register("hotelDuration", {
                           required: "Enter Duration ex. 5 nights ",
                         })}
                       />
-                      {errors.duration && (
+                      {errors.hotelDuration && (
                         <span className="errorMsg">
-                          {errors.duration.message}
+                          {errors.hotelDuration.message}
                         </span>
                       )}
                     </div>
@@ -1309,17 +1343,102 @@ const App = () => {
                   </Col>
                   <Col md={6}>
                     <div className="input__container">
-                      <label htmlFor="conferenceHall">Conference Hall</label>
+                      <label htmlFor="roomType">Type of Rooms</label>
                       <input
                         type="text"
-                        id="conferenceHall"
-                        placeholder="Conference Hall"
+                        id="roomType"
+                        placeholder="Type of Rooms"
                         className="input-element"
-                        name="conferenceHall"
-                        {...register("name", {
+                        name="roomType"
+                        {...register("roomType", {
                           required: "Enter the Details",
                         })}
                       />
+                      {errors.roomType && (
+                        <span className="errorMsg">
+                          {errors.roomType.message}
+                        </span>
+                      )}
+                    </div>
+                  </Col>
+                </Row>
+                <Row className="row__container">
+                  <Col md={6}>
+                    <div className="input__container">
+                      <label htmlFor="upgrade__comp">
+                        Upgrades Complementry
+                        <span className="required_field">*</span>
+                      </label>
+                      <select
+                        id="upgrade__comp"
+                        name="upgrade__comp"
+                        className="input-element"
+                        {...register("upgrade__comp", {
+                          required: "Select from list",
+                        })}>
+                        Club Room / Jr.Suite / Suite/Dlx Suite / Pres Suite /
+                        Other
+                        <option value="">--Select--</option>
+                        <option value="ClubRoom">Club Room </option>
+                        <option value="JrSuite">Jr.Suite</option>
+                        <option value="suite">Suite</option>
+                        <option value="JrSuite">Dlx Suite</option>
+                        <option value="PreSuite">Pres Suite</option>
+                        <option value="Other">Other</option>
+                      </select>
+                      {errors.upgrade__comp && (
+                        <span className="errorMsg">
+                          {errors.upgrade__comp.message}
+                        </span>
+                      )}
+                    </div>
+                  </Col>
+
+                  <Col md={6}>
+                    <div className="input__container">
+                      <label htmlFor="upgrade__Paid">
+                        Upgrades Paid
+                        <span className="required_field">*</span>
+                      </label>
+                      <select
+                        id="upgrade__Paid"
+                        name="upgrade__Paid"
+                        className="input-element"
+                        {...register("upgrade__Paid", {
+                          required: "Select from list",
+                        })}>
+                        <option value="">--Select--</option>
+                        <option value="ClubRoom">Club Room </option>
+                        <option value="JrSuite">Jr.Suite</option>
+                        <option value="suite">Suite</option>
+                        <option value="JrSuite">Dlx Suite</option>
+                        <option value="PreSuite">Pres Suite</option>
+                        <option value="Other">Other</option>
+                      </select>
+                      {errors.upgrade__Paid && (
+                        <span className="errorMsg">
+                          {errors.upgrade__Paid.message}
+                        </span>
+                      )}
+                    </div>
+                  </Col>
+                </Row>
+
+                <Row className="row__container">
+                  <Col md={6}>
+                    <div className="input__container">
+                      <label htmlFor="conferenceHall">Conference Hall</label>
+                      <select
+                        id="conferenceHall"
+                        name="conferenceHall"
+                        className="input-element"
+                        {...register("conferenceHall", {
+                          required: "Select from list",
+                        })}>
+                        <option value="">--Select--</option>
+                        <option value="Yes">Yes </option>
+                        <option value="No">No</option>
+                      </select>
                       {errors.conferenceHall && (
                         <span className="errorMsg">
                           {errors.conferenceHall.message}
@@ -1328,207 +1447,450 @@ const App = () => {
                     </div>
                   </Col>
                 </Row>
-                <br />
 
-                <Row className="row__container">
-                  <label>
-                    Seating <span className="required_field">*</span>
-                  </label>
-                  <br />
-                  <Col md={4} sm={6}>
-                    <div style={{ marginTop: "10px", padding: "5px" }}>
-                      <Controller
-                        name="RoundTable"
-                        {...register("RoundTable")}
-                        control={control}
-                        render={({ field }) => (
-                          <>
+                {watchAllFields.conferenceHall == "Yes" && (
+                  <>
+                    <Row className="row__container">
+                      <p className="services">Conference Booking Details</p>
+                      <Col md={4}>
+                        <div className="input__container">
+                          <label>Area in Square Feet</label>
+                          <Controller
+                            name="squareFeet"
+                            control={control}
+                            render={({ field }) => (
+                              <input
+                                {...field}
+                                type="number"
+                                className="input-element"
+                                placeholder="Enter Area in Square Feet"
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  handleSquareFeetChange(e.target.value);
+                                }}
+                              />
+                            )}
+                          />
+                        </div>
+                      </Col>
+                      <Col md={4}>
+                        <div className="input__container">
+                          <label>Area in Square Meters</label>
+                          <Controller
+                            name="squareMeters"
+                            control={control}
+                            render={({ field }) => (
+                              <input
+                                {...field}
+                                type="number"
+                                className="input-element"
+                                placeholder="Enter Area in Square Meters"
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  handleSquareMetersChange(e.target.value);
+                                }}
+                              />
+                            )}
+                          />
+                        </div>
+                      </Col>
+
+                      {/* <Col md={4}>
+                        <div className="input__container">
+                          <label htmlFor="conferenceArea">
+                            Area In Sq. Ft
+                            <span className="required_field">*</span>
+                          </label>
+                          <input
+                            type="Number"
+                            id="conferenceArea"
+                            placeholder="Enter Area in Sq. Ft"
+                            className="input-element"
+                            name="conferenceArea"
+                            {...register("conferenceArea", {
+                              required: "Conference Area is required.",
+                            })}
+                          />
+                          {errors.conferenceArea && (
+                            <span className="errorMsg">
+                              {errors.conferenceArea.message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+                      <Col md={2} className="conf__agenda">
+                        <p>In Mt. Sq</p>
+                        {areaInMeter}
+                      </Col> */}
+                      <Col md={4}>
+                        <div className="input__container">
+                          <label htmlFor="duration">
+                            Duration <span className="required_field">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            id="duration"
+                            placeholder="Total Days"
+                            className="input-element"
+                            name="duration"
+                            {...register("duration", {
+                              required: "Total Days",
+                            })}
+                          />
+                          {errors.duration && (
+                            <span className="errorMsg">
+                              {errors.duration.message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+                    </Row>
+                    <Row className="row__container">
+                      <Col md={4}>
+                        <div className="input__container">
+                          <label htmlFor="setUpDate">
+                            Set Up Date
+                            <span className="required_field">*</span>
+                          </label>
+                          <input
+                            id="setUpDate"
+                            name="setUpDate"
+                            type="date"
+                            className="input-element"
+                            {...register("setUpDate", {
+                              required: "Select Date",
+                            })}
+                          />
+
+                          {errors.setUpDate && (
+                            <span className="errorMsg">
+                              {errors.setUpDate.message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+
+                      <Col md={4}>
+                        <div className="input__container">
+                          <label htmlFor="conferenceStartDate">
+                            Conference Start Date
+                            <span className="required_field">*</span>
+                          </label>
+                          <input
+                            id="conferenceStartDate"
+                            name="conferenceStartDate"
+                            type="date"
+                            className="input-element"
+                            {...register("conferenceStartDate", {
+                              required: "Select Date",
+                            })}
+                          />
+
+                          {errors.setUpDate && (
+                            <span className="errorMsg">
+                              {errors.setUpDate.message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+
+                      <Col md={4}>
+                        <div className="input__container">
+                          <label htmlFor="conferenceEndDate">
+                            Conference End Date
+                            <span className="required_field">*</span>
+                          </label>
+                          <input
+                            id="setUpDate"
+                            name="conferenceEndDate"
+                            type="date"
+                            className="input-element"
+                            {...register("conferenceEndDate", {
+                              required: "Select Date",
+                            })}
+                          />
+
+                          {errors.conferenceEndDate && (
+                            <span className="errorMsg">
+                              {errors.conferenceEndDate.message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+                    </Row>
+                  </>
+                )}
+
+                <br />
+                {watchAllFields.conferenceHall == "Yes" && (
+                  <Row className="row__container">
+                    <label>
+                      Seating <span className="required_field">*</span>
+                    </label>
+                    <br />
+                    <Col md={4} sm={6}>
+                      <div style={{ marginTop: "10px", padding: "5px" }}>
+                        <Controller
+                          name="RoundTable"
+                          {...register("RoundTable")}
+                          control={control}
+                          render={({ field }) => (
+                            <>
+                              <input
+                                type="checkbox"
+                                {...field}
+                                checked={field.value || false}
+                                style={{ marginRight: " 5px" }}
+                              />
+                            </>
+                          )}
+                        />
+
+                        <label
+                          style={{
+                            marginLeft: "5px",
+
+                            color: "black",
+                          }}>
+                          Round Table
+                        </label>
+
+                        <LazyLoadImage
+                          src={Round}
+                          className="img-fluid img_index"
+                        />
+                      </div>
+                    </Col>
+                    <Col md={4} sm={6}>
+                      <div style={{ marginTop: "10px", padding: "5px" }}>
+                        <Controller
+                          name="HalfMoon"
+                          {...register("HalfMoon")}
+                          control={control}
+                          render={({ field }) => (
                             <input
                               type="checkbox"
                               {...field}
                               checked={field.value || false}
-                              style={{ marginRight: " 5px" }}
+                              style={{ marginRight: "5px" }}
                             />
-                          </>
-                        )}
-                      />
+                          )}
+                        />
+                        <label
+                          style={{
+                            marginLeft: "5px",
+                            color: "black",
+                          }}>
+                          Half Moon
+                        </label>
+                        <LazyLoadImage
+                          src={Halfmoon}
+                          className="img-fluid img_index"
+                        />
+                      </div>
+                    </Col>
+                    <Col md={4} sm={6}>
+                      <div style={{ marginTop: "10px", padding: "5px" }}>
+                        <Controller
+                          name="ClassRoom"
+                          {...register("ClassRoom")}
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              type="checkbox"
+                              {...field}
+                              checked={field.value || false}
+                              style={{ marginRight: "5px" }}
+                            />
+                          )}
+                        />
+                        <label style={{ marginLeft: "5px", color: "black" }}>
+                          Class room
+                        </label>
+                        <LazyLoadImage
+                          src={ClassRoom}
+                          className="img-fluid img_index"
+                        />
+                      </div>
+                    </Col>
+                    <Col md={4} sm={6}>
+                      <div style={{ marginTop: "10px", padding: "5px" }}>
+                        <Controller
+                          name="Theatre"
+                          {...register("Theatre")}
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              type="checkbox"
+                              {...field}
+                              checked={field.value || false}
+                              style={{ marginRight: "5px" }}
+                            />
+                          )}
+                        />
+                        <label style={{ marginLeft: "5px", color: "black" }}>
+                          Theatre
+                        </label>
+                        <LazyLoadImage
+                          src={Theater}
+                          className="img-fluid img_index"
+                        />
+                      </div>
+                    </Col>
+                    <Col md={4} sm={6}>
+                      <div style={{ marginTop: "10px", padding: "5px" }}>
+                        <Controller
+                          name="UShaped"
+                          {...register("UShaped")}
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              type="checkbox"
+                              {...field}
+                              checked={field.value || false}
+                              style={{ marginRight: "5px" }}
+                            />
+                          )}
+                        />
+                        <label style={{ marginLeft: "5px", color: "black" }}>
+                          U Shaped
+                        </label>
+                        <LazyLoadImage
+                          src={UShaped}
+                          className="img-fluid img_index"
+                        />
+                      </div>
+                    </Col>
+                    <Col md={4} sm={6}>
+                      <div style={{ marginTop: "10px", padding: "5px" }}>
+                        <Controller
+                          name="Cocktail"
+                          {...register("Cocktail")}
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              type="checkbox"
+                              {...field}
+                              checked={field.value || false}
+                              style={{ marginRight: "5px" }}
+                            />
+                          )}
+                        />
+                        <label style={{ marginLeft: "5px", color: "black" }}>
+                          Cocktail
+                        </label>
+                        <LazyLoadImage
+                          src={Cocktail}
+                          className="img-fluid img_index"
+                          style={{ backgroundColor: "white" }}
+                        />
+                      </div>
+                    </Col>
+                    <Col md={4} sm={6}>
+                      <div style={{ marginTop: "10px", padding: "5px" }}>
+                        <Controller
+                          name="Others"
+                          {...register("Others")}
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              type="checkbox"
+                              {...field}
+                              checked={field.value || false}
+                              style={{ marginRight: "5px" }}
+                            />
+                          )}
+                        />
+                        <label style={{ marginLeft: "5px", color: "black" }}>
+                          Others
+                        </label>
+                      </div>
+                    </Col>
 
-                      <label
-                        style={{
-                          marginLeft: "5px",
+                    {isSeating &&
+                    !watchAllFields.RoundTable &&
+                    !watchAllFields.HalfMoon &&
+                    !watchAllFields.ClassRoom &&
+                    !watchAllFields.Theatre &&
+                    !watchAllFields.UShaped &&
+                    !watchAllFields.Cocktail &&
+                    !watchAllFields.Others ? (
+                      <>
+                        <br />
+                        <span className="errorMsg">
+                          At least one must be selected.
+                        </span>
+                      </>
+                    ) : null}
+                  </Row>
+                )}
+                {watchAllFields.duration &&
+                  watchAllFields.conferenceStartDate && (
+                    <Row className="row__container">
+                      <p className="services">Conference Agenda</p>
+                      <Row className="conf__agenda inin">
+                        <Col xs={2}>
+                          <p>Day</p>
+                        </Col>
+                        <Col xs={2}>
+                          <p>Date</p>
+                        </Col>
+                        <Col xs={2}>{/* <p>Day</p> */}</Col>
+                        <Col xs={2}>
+                          <p>Time</p>
+                        </Col>
+                        <Col xs={2}>
+                          <p>Activity</p>
+                        </Col>
+                      </Row>
+                      {agenda__number.map((item, index) => {
+                        if (!watchAllFields.conferenceStartDate) {
+                          return;
+                        }
+                        const newDate = new Date(
+                          startDate.getTime() + index * 86400000
+                        ); // Increment date by index days
+                        const dayName = new Intl.DateTimeFormat("en-US", {
+                          weekday: "long",
+                        }).format(newDate); // Get day name
 
-                          color: "black",
-                        }}>
-                        Round Table
-                      </label>
-                      <LazyLoadImage
-                        src={Round}
-                        className="img-fluid img_index"
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4} sm={6}>
-                    <div style={{ marginTop: "10px", padding: "5px" }}>
-                      <Controller
-                        name="HalfMoon"
-                        {...register("HalfMoon")}
-                        control={control}
-                        render={({ field }) => (
-                          <input
-                            type="checkbox"
-                            {...field}
-                            checked={field.value || false}
-                            style={{ marginRight: "5px" }}
-                          />
-                        )}
-                      />
-                      <label
-                        style={{
-                          marginLeft: "5px",
-                          color: "black",
-                        }}>
-                        Half Moon
-                      </label>
-                      <LazyLoadImage
-                        src={Halfmoon}
-                        className="img-fluid img_index"
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4} sm={6}>
-                    <div style={{ marginTop: "10px", padding: "5px" }}>
-                      <Controller
-                        name="ClassRoom"
-                        {...register("ClassRoom")}
-                        control={control}
-                        render={({ field }) => (
-                          <input
-                            type="checkbox"
-                            {...field}
-                            checked={field.value || false}
-                            style={{ marginRight: "5px" }}
-                          />
-                        )}
-                      />
-                      <label style={{ marginLeft: "5px", color: "black" }}>
-                        ClassRoom
-                      </label>
-                      <LazyLoadImage
-                        src={ClassRoom}
-                        className="img-fluid img_index"
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4} sm={6}>
-                    <div style={{ marginTop: "10px", padding: "5px" }}>
-                      <Controller
-                        name="Theatre"
-                        {...register("Theatre")}
-                        control={control}
-                        render={({ field }) => (
-                          <input
-                            type="checkbox"
-                            {...field}
-                            checked={field.value || false}
-                            style={{ marginRight: "5px" }}
-                          />
-                        )}
-                      />
-                      <label style={{ marginLeft: "5px", color: "black" }}>
-                        Theatre
-                      </label>
-                      <LazyLoadImage
-                        src={Theater}
-                        className="img-fluid img_index"
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4} sm={6}>
-                    <div style={{ marginTop: "10px", padding: "5px" }}>
-                      <Controller
-                        name="UShaped"
-                        {...register("UShaped")}
-                        control={control}
-                        render={({ field }) => (
-                          <input
-                            type="checkbox"
-                            {...field}
-                            checked={field.value || false}
-                            style={{ marginRight: "5px" }}
-                          />
-                        )}
-                      />
-                      <label style={{ marginLeft: "5px", color: "black" }}>
-                        U Shaped
-                      </label>
-                      <LazyLoadImage
-                        src={UShaped}
-                        className="img-fluid img_index"
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4} sm={6}>
-                    <div style={{ marginTop: "10px", padding: "5px" }}>
-                      <Controller
-                        name="Cocktail"
-                        {...register("Cocktail")}
-                        control={control}
-                        render={({ field }) => (
-                          <input
-                            type="checkbox"
-                            {...field}
-                            checked={field.value || false}
-                            style={{ marginRight: "5px" }}
-                          />
-                        )}
-                      />
-                      <label style={{ marginLeft: "5px", color: "black" }}>
-                        Cocktail
-                      </label>
-                      <LazyLoadImage
-                        src={Cocktail}
-                        className="img-fluid img_index"
-                        style={{ backgroundColor: "white" }}
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4} sm={6}>
-                    <div style={{ marginTop: "10px", padding: "5px" }}>
-                      <Controller
-                        name="Others"
-                        {...register("Others")}
-                        control={control}
-                        render={({ field }) => (
-                          <input
-                            type="checkbox"
-                            {...field}
-                            checked={field.value || false}
-                            style={{ marginRight: "5px" }}
-                          />
-                        )}
-                      />
-                      <label style={{ marginLeft: "5px", color: "black" }}>
-                        Others
-                      </label>
-                    </div>
-                  </Col>
+                        const formattedDate = new Intl.DateTimeFormat(
+                          "en-GB"
+                        ).format(newDate); // Format date as dd-mm-yyyy
 
-                  {isSeating &&
-                  !watchAllFields.RoundTable &&
-                  !watchAllFields.HalfMoon &&
-                  !watchAllFields.ClassRoom &&
-                  !watchAllFields.Theatre &&
-                  !watchAllFields.UShaped &&
-                  !watchAllFields.Cocktail &&
-                  !watchAllFields.Others ? (
-                    <>
-                      <br />
-                      <span className="errorMsg">
-                        At least one must be selected.
-                      </span>
-                    </>
-                  ) : null}
-                </Row>
+                        // const newDate = new Date(
+                        //   startDate.getTime() + index * 86400000
+                        // ); // Increment date by index days
+                        // const dayName = new Intl.DateTimeFormat("en-US", {
+                        //   weekday: "long",
+                        // }).format(newDate); // Get day name
+
+                        return (
+                          <Row key={index}>
+                            <Col xs={2} className="conf__agenda">
+                              <p>{index + 1}</p>
+                            </Col>
+                            <Col xs={2} className="conf__agenda">
+                              <p>{formattedDate}</p>
+                            </Col>
+                            <Col xs={2} className="conf__agenda">
+                              <p>{dayName}</p>
+                            </Col>
+                            <Col xs={2} className="conf__agenda">
+                              <input type="time" placeholder="Time" />
+                            </Col>
+                            <Col xs={2} className="conf__agenda">
+                              <input
+                                type="text"
+                                placeholder="Enter your Activity"
+                              />
+                            </Col>
+                          </Row>
+                        );
+                      })}
+                    </Row>
+                  )}
+
                 {/* <Row className="row__container">
                   <Col md={12}>
                     <div className="input__container">
@@ -1565,30 +1927,157 @@ const App = () => {
               <>
                 <Row className="row__container">
                   <p className="services">Land Arrangement</p>
-                  <Col md={12}>
+                  <Col md={4}>
                     <div className="input__container">
-                      <label htmlFor="airportTransfers">
-                        Airport transfers{" "}
+                      <label htmlFor="airportArrivalTransfers">
+                        Airport Arrival transfers{" "}
                         <span className="required_field">*</span>
                       </label>
                       <select
-                        id="airportTransfers"
-                        name="airportTransfers"
+                        id="airportArrivalTransfers"
+                        name="airportArrivalTransfers"
                         className="input-element"
-                        {...register("airportTransfers", {
+                        {...register("airportArrivalTransfers", {
                           required: "Select from list",
                         })}>
                         <option value="">--Select--</option>
                         <option value="Yes">Yes</option>
                         <option value="No">No</option>
                       </select>
-                      {errors.airportTransfers && (
+                      {errors.airportArrivalTransfers && (
                         <span className="errorMsg">
-                          {errors.airportTransfers.message}
+                          {errors.airportArrivalTransfers.message}
                         </span>
                       )}
                     </div>
                   </Col>
+                  {watchAllFields.airportArrivalTransfers == "Yes" && (
+                    <>
+                      <Col md={4}>
+                        <div className="input__container">
+                          <label htmlFor="arrvilaDate">
+                            Arrival Date{" "}
+                            <span className="required_field">*</span>
+                          </label>
+                          <input
+                            id="arrvilaDate"
+                            name="arrvilaDate"
+                            type="date"
+                            className="input-element"
+                            {...register("arrvilaDate", {
+                              required: "Select Date",
+                            })}
+                          />
+
+                          {errors.arrvilaDate && (
+                            <span className="errorMsg">
+                              {errors.arrvilaDate.message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+
+                      <Col md={4}>
+                        <div className="input__container">
+                          <label htmlFor="arrvilTime">
+                            Arrival Time{" "}
+                            <span className="required_field">*</span>
+                          </label>
+                          <input
+                            id="arrvilTime"
+                            name="arrvilTime"
+                            type="time"
+                            className="input-element"
+                            {...register("arrvilTime", {
+                              required: "Select Time",
+                            })}
+                          />
+
+                          {errors.arrvilTime && (
+                            <span className="errorMsg">
+                              {errors.arrvilTime.message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+                    </>
+                  )}
+                </Row>
+                <Row className="row__container">
+                  <Col md={4}>
+                    <div className="input__container">
+                      <label htmlFor="airportDepartureTrans">
+                        Airport Departure Transfer
+                        <span className="required_field">*</span>
+                      </label>
+                      <select
+                        id="airportDepartureTrans"
+                        name="airportDepartureTrans"
+                        className="input-element"
+                        {...register("airportDepartureTrans", {
+                          required: "Select from list",
+                        })}>
+                        <option value="">--Select--</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                      {errors.airportDepartureTrans && (
+                        <span className="errorMsg">
+                          {errors.airportDepartureTrans.message}
+                        </span>
+                      )}
+                    </div>
+                  </Col>
+                  {watchAllFields.airportDepartureTrans == "Yes" && (
+                    <>
+                      <Col md={4}>
+                        <div className="input__container">
+                          <label htmlFor="departureDate">
+                            Departure Date{" "}
+                            <span className="required_field">*</span>
+                          </label>
+                          <input
+                            id="departureDate"
+                            name="departureDate"
+                            type="date"
+                            className="input-element"
+                            {...register("departureDate", {
+                              required: "Select Date",
+                            })}
+                          />
+
+                          {errors.departureDate && (
+                            <span className="errorMsg">
+                              {errors.departureDate.message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+                      <Col md={4}>
+                        <div className="input__container">
+                          <label htmlFor="departureTime">
+                            Departure Time{" "}
+                            <span className="required_field">*</span>
+                          </label>
+                          <input
+                            id="aTime"
+                            name="departureTime"
+                            type="time"
+                            className="input-element"
+                            {...register("departureTime", {
+                              required: "Select Time",
+                            })}
+                          />
+
+                          {errors.departureTime && (
+                            <span className="errorMsg">
+                              {errors.departureTime.message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+                    </>
+                  )}
                 </Row>
                 <br />
 
@@ -1600,8 +2089,8 @@ const App = () => {
                   <Col md={4}>
                     <div style={{ marginTop: "10px", padding: "5px" }}>
                       <Controller
-                        name="OneDay"
-                        {...register("OneDay")}
+                        name="FullDay"
+                        {...register("FullDay")}
                         control={control}
                         render={({ field }) => (
                           <input
@@ -1617,15 +2106,21 @@ const App = () => {
 
                           color: "black",
                         }}>
-                        1 Day
+                        Full Day
                       </label>
+                      <input
+                        type="text"
+                        name="totalFullDays"
+                        className="input__text"
+                        placeholder="Tot. Days"
+                      />
                     </div>
                   </Col>
                   <Col md={4}>
                     <div style={{ marginTop: "10px", padding: "5px" }}>
                       <Controller
-                        name="TwoHalfDay"
-                        {...register("TwoHalfDay")}
+                        name="halfDay"
+                        {...register("halfDay")}
                         control={control}
                         render={({ field }) => (
                           <input
@@ -1641,30 +2136,17 @@ const App = () => {
                           marginLeft: "5px",
                           color: "black",
                         }}>
-                        2 Half Day
+                        Half Day
                       </label>
-                    </div>
-                  </Col>
-                  <Col md={4}>
-                    <div style={{ marginTop: "10px", padding: "5px" }}>
-                      <Controller
-                        name="TwoFullDay"
-                        {...register("TwoFullDay")}
-                        control={control}
-                        render={({ field }) => (
-                          <input
-                            type="checkbox"
-                            {...field}
-                            checked={field.value || false}
-                            style={{ marginRight: "5px" }}
-                          />
-                        )}
+                      <input
+                        type="text"
+                        name="totalHalfDays"
+                        className="input__text"
+                        placeholder="Tot. Days"
                       />
-                      <label style={{ marginLeft: "5px", color: "black" }}>
-                        2 Full Day
-                      </label>
                     </div>
                   </Col>
+
                   <Col md={4}>
                     <div style={{ marginTop: "10px", padding: "5px" }}>
                       <Controller
@@ -1685,11 +2167,29 @@ const App = () => {
                       </label>
                     </div>
                   </Col>
+                  {/* <Row className="row__container">
+                    <Col md={4}>
+                      <div className="input__container">
+                        <label htmlFor="galaSize">
+                          Specify
+                          <span className="required_field">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          id="SightSeeingSpecify"
+                          placeholder="Specify"
+                          className="input-element"
+                          name="SightSeeingSpecify"
+                          {...register("SightSeeingSpecify", {})}
+                        />
+                      </div>
+                    </Col>
+                  </Row> */}
                   <Col md={4}>
                     <div style={{ marginTop: "10px", padding: "5px" }}>
                       <Controller
-                        name="others"
-                        {...register("Others")}
+                        name="Specify"
+                        {...register("Specify")}
                         control={control}
                         render={({ field }) => (
                           <input
@@ -1701,17 +2201,22 @@ const App = () => {
                         )}
                       />
                       <label style={{ marginLeft: "5px", color: "black" }}>
-                        Others
+                        Specify
                       </label>
+                      <input
+                        type="text"
+                        name="sightSeeingSpecify"
+                        className=""
+                        placeholder="Specify"
+                      />
                     </div>
                   </Col>
 
                   {isSight &&
-                  !watchAllFields.OneDay &&
-                  !watchAllFields.TwoHalfDay &&
-                  !watchAllFields.TwoFullDay &&
+                  !watchAllFields.FullDay &&
+                  !watchAllFields.halfDay &&
                   !watchAllFields.AllPopularSites &&
-                  !watchAllFields.Others ? (
+                  !watchAllFields.otherSite ? (
                     <>
                       <br />
                       <span className="errorMsg">
@@ -1723,9 +2228,11 @@ const App = () => {
               </>
             )}
 
-            <Row className="row__container">
+            {/* md={watchAllFields.galaDinner === "Yes" ? 4 : 6} */}
+
+            {/* <Row className="row__container">
               <p className="services">Other Services</p>
-              {/* md={watchAllFields.galaDinner === "Yes" ? 4 : 6} */}
+              
               <Col md={4}>
                 <div className="input__container">
                   <label htmlFor="galaDinner">
@@ -1751,31 +2258,30 @@ const App = () => {
                 </div>
               </Col>
 
-              {watchAllFields.galaDinner == "Yes" && (
-                <Col md={4}>
-                  <div className="input__container">
-                    <label htmlFor="galaDinnerDate">
-                      Gala Dinner Date
-                      <span className="required_field">*</span>
-                    </label>
-                    <input
-                      id="galaDinnerDate"
-                      name="galaDinnerDate"
-                      type="date"
-                      className="input-element"
-                      {...register("galaDinnerDate", {
-                        required: "Select Date",
-                      })}
-                    />
+              <Col md={4}>
+                <div className="input__container">
+                  <label htmlFor="galaDinnerDate">
+                    Gala Dinner Date
+                    <span className="required_field">*</span>
+                  </label>
+                  <input
+                    id="galaDinnerDate"
+                    name="galaDinnerDate"
+                    type="date"
+                    className="input-element"
+                    {...register("galaDinnerDate", {
+                      required: "Select Date",
+                    })}
+                  />
 
-                    {errors.galaDinnerDate && (
-                      <span className="errorMsg">
-                        {errors.galaDinnerDate.message}
-                      </span>
-                    )}
-                  </div>
-                </Col>
-              )}
+                  {errors.galaDinnerDate && (
+                    <span className="errorMsg">
+                      {errors.galaDinnerDate.message}
+                    </span>
+                  )}
+                </div>
+              </Col>
+
               <Col md={4}>
                 <div className="input__container">
                   <label htmlFor="galaSize">
@@ -1801,11 +2307,11 @@ const App = () => {
                   )}
                 </div>
               </Col>
-            </Row>
+            </Row> */}
 
-            <Row className="row__container">
+            {/* <Row className="row__container">
               <Col md={4}>
-                {/* <div className="input__container">
+                <div className="input__container">
                   <label htmlFor="LunchIndianRestaurantCount">
                     Lunch at Indian Restaurant
                     <span className="required_field">*</span>
@@ -1829,7 +2335,7 @@ const App = () => {
                       {errors.LunchIndianRestaurantCount.message}
                     </span>
                   )}
-                </div> */}
+                </div>
                 <div className="input__container">
                   <label htmlFor="LunchIndianRestaurantCount">
                     Lunch
@@ -1868,7 +2374,6 @@ const App = () => {
                       required: "Select Date",
                     })}
                   />
-
                   {errors.lunchDate && (
                     <span className="errorMsg">{errors.lunchDate.message}</span>
                   )}
@@ -1899,8 +2404,8 @@ const App = () => {
                   )}
                 </div>
               </Col>
-            </Row>
-            <Row className="row__container">
+            </Row> */}
+            {/* <Row className="row__container">
               <Col md={4}>
                 <div className="input__container">
                   <label htmlFor="Dinners">
@@ -1926,8 +2431,9 @@ const App = () => {
                     <span className="errorMsg">{errors.Dinners.message}</span>
                   )}
                 </div>
-              </Col>
-              <Col md={4}>
+              </Col> */}
+
+            {/* <Col md={4}>
                 <div className="input__container">
                   <label htmlFor="dinnerDate">
                     Dinner Date
@@ -1949,9 +2455,9 @@ const App = () => {
                     </span>
                   )}
                 </div>
-              </Col>
+              </Col> */}
 
-              <Col md={4}>
+            {/* <Col md={4}>
                 <div className="input__container">
                   <label htmlFor="dinnerSize">
                     Group size for Dinner
@@ -1960,7 +2466,7 @@ const App = () => {
                   <input
                     type="text"
                     id="dinnerSize"
-                    placeholder="Group size"
+                    placeholder="Group size Dinner"
                     className="input-element"
                     name="dinnerSize"
                     {...register("dinnerSize", {
@@ -1977,9 +2483,9 @@ const App = () => {
                     </span>
                   )}
                 </div>
-              </Col>
-            </Row>
-            <Row className="row__container">
+              </Col> */}
+
+            {/* <Row className="row__container">
               <Col md={4}>
                 <div className="input__container">
                   <label htmlFor="DjLightSound">
@@ -2003,7 +2509,7 @@ const App = () => {
                   )}
                 </div>
               </Col>
-            </Row>
+            </Row> */}
 
             <button
               type="submit"
