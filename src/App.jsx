@@ -33,6 +33,9 @@ const App = () => {
   const [countryid, setCountryid] = useState(0);
   const [stateid, setStateid] = useState(0);
   const [selectedCity, setSelectedCity] = useState("");
+  const [countryList, setCountryList] = useState([0]);
+  const [countryIdMap, setCountryIdMap] = useState({});
+  const [statesMap, setStatesMap] = useState({});
   const [isSubmitClicked, setIsSubmitClicked] = useState(false);
   const [isSight, setSightClicked] = useState(false);
   const [isSeating, SetSeating] = useState(false);
@@ -58,14 +61,42 @@ const App = () => {
 
   const watchAllFields = watch();
 
-  const addDestination = (e) => {
-    if (e.target.id === "city") {
-      setCity(() => {
-        return [...city, 1];
-      });
-    }
-    e;
+  // const addDestination = (e) => {
+  //   if (e.target.id === "city") {
+  //     setCity(() => {
+  //       return [...city, 1];
+  //     });
+  //   }
+  //   e;
+  // };
+
+  //  For Country and city in select bos
+  const addDestination = () => {
+    setCountryList((prev) => [...prev, prev.length]);
   };
+
+  const handleCountryChange = async (index, country) => {
+    setCountryIdMap((prev) => ({ ...prev, [index]: country.id }));
+    setValue(`state-${index}`, []); // Reset state field
+
+    // Fetch states based on selected country
+    try {
+      const response = await axios.post(
+        `https://countriesnow.space/api/v0.1/countries/states`,
+        {
+          country: country.name,
+        }
+      );
+      const statesData = response.data.data.states.map((state) => ({
+        value: state.name,
+        label: state.name,
+      }));
+      setStatesMap((prev) => ({ ...prev, [index]: statesData }));
+    } catch (error) {
+      console.error("Error fetching states:", error);
+    }
+  };
+  // end for contry and State in select box
 
   useEffect(() => {
     console.log("hello");
@@ -221,6 +252,7 @@ const App = () => {
       setValue("squareFeet", convertedValue);
     }
   };
+  // end of sq km and meter sq
 
   const options = [
     "Travel bookings",
@@ -603,6 +635,212 @@ const App = () => {
             )}
 
             {watchAllFields.destination === "international" && (
+              <>
+                {countryList.map((item, index) => (
+                  <Row className="row__container" key={index}>
+                    <Col md={6}>
+                      <div className="input__container">
+                        <label>
+                          Country <span className="required_field">*</span>
+                        </label>
+                        <Controller
+                          name={`country-${index}`}
+                          control={control}
+                          render={({ field }) => (
+                            <CountrySelect
+                              {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                handleCountryChange(index, e);
+                              }}
+                              placeHolder="Select Country"
+                            />
+                          )}
+                        />
+                      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="input__container">
+                        <label>State </label>
+                        <Controller
+                          name={`state-${index}`}
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              options={statesMap[index]}
+                              isMulti
+                              className="input-element-state"
+                              onChange={(selectedOptions) => {
+                                field.onChange(selectedOptions);
+                              }}
+                              placeholder="Select State"
+                            />
+                          )}
+                        />
+                      </div>
+                    </Col>
+                  </Row>
+                ))}
+                <Row>
+                  <Col xs={4}>
+                    <Button
+                      variant="primary"
+                      className="mt-3"
+                      size="sm"
+                      onClick={addDestination}>
+                      Add Country
+                    </Button>
+                  </Col>
+                </Row>
+
+                {
+                  // <Row className="row__container">
+                  //   <Col md={6}>
+                  //     <div className="input__container">
+                  //       <label>
+                  //         Country <span className="required_field">*</span>
+                  //       </label>
+                  //       <Controller
+                  //         name="country"
+                  //         control={control}
+                  //         render={({ field }) => (
+                  //           <CountrySelect
+                  //             {...field}
+                  //             required
+                  //             onChange={(e) => {
+                  //               field.onChange(e);
+                  //               setCountryid(e.id);
+                  //             }}
+                  //             placeHolder="Select Country"
+                  //           />
+                  //         )}
+                  //       />
+                  //       {countryid === 0 && (
+                  //         <span className="errorMsg">
+                  //           Select country from list
+                  //         </span>
+                  //       )}
+                  //     </div>
+                  //   </Col>
+                  //   <Col md={6}>
+                  //     <div className="input__container">
+                  //       <label>City 1</label>
+                  //       <Controller
+                  //         name="state"
+                  //         control={control}
+                  //         render={({ field }) => (
+                  //           <StateSelect
+                  //             {...field}
+                  //             countryid={countryid}
+                  //             onChange={(e) => {
+                  //               field.onChange(e);
+                  //               setStateid(e.id);
+                  //             }}
+                  //             placeHolder="Select City"
+                  //           />
+                  //         )}
+                  //       />
+                  //     </div>
+                  //   </Col>
+                  //   {city.map((item, index) => (
+                  //     <Col md={6} key={index}>
+                  //       <div className="input__container mt-2">
+                  //         <label>City {index + 2}</label>
+                  //         <Controller
+                  //           name={`state-${index}`}
+                  //           control={control}
+                  //           render={({ field }) => (
+                  //             <StateSelect
+                  //               {...field}
+                  //               countryid={countryid}
+                  //               onChange={(e) => {
+                  //                 field.onChange(e);
+                  //                 setStateid(e.id);
+                  //               }}
+                  //               placeHolder="Select City"
+                  //             />
+                  //           )}
+                  //         />
+                  //       </div>
+                  //     </Col>
+                  //   ))}
+                  //   <Row>
+                  //     <Col md={3}>
+                  //       <Button
+                  //         variant="primary"
+                  //         id="city"
+                  //         className="mt-3"
+                  //         size="sm"
+                  //         onClick={(e) => addDestination(e)}>
+                  //         Add City
+                  //       </Button>
+                  //     </Col>
+                  //   </Row>
+                  //   {/* {country.map((item, index) => (
+                  //       <Row className="row__container" key={index}>
+                  //         <Col md={6}>
+                  //           <div className="input__container">
+                  //             <label>
+                  //               Country{" "}
+                  //               <span className="required_field">*</span>
+                  //             </label>
+                  //             <Controller
+                  //               name={`country-${index}`}
+                  //               control={control}
+                  //               render={({ field }) => (
+                  //                 <CountrySelect
+                  //                   {...field}
+                  //                   required
+                  //                   onChange={(e) => {
+                  //                     field.onChange(e);
+                  //                     setCountryid(e.id);
+                  //                   }}
+                  //                   placeHolder="Select Country"
+                  //                 />
+                  //               )}
+                  //             />
+                  //             {countryid === 0 && (
+                  //               <span className="errorMsg">
+                  //                 Select country from list
+                  //               </span>
+                  //             )}
+                  //           </div>
+                  //         </Col>
+                  //         <Col md={6}>
+                  //           <div className="input__container">
+                  //             <label>City</label>
+                  //             <Controller
+                  //               name={`StateExta-${index}`}
+                  //               control={control}
+                  //               render={({ field }) => (
+                  //                 <StateSelect
+                  //                   {...field}
+                  //                   countryid={countryid}
+                  //                   onChange={(e) => {
+                  //                     field.onChange(e);
+                  //                     setStateid(e.id);
+                  //                   }}
+                  //                   placeHolder="Select City"
+                  //                 />
+                  //               )}
+                  //             />
+                  //           </div>
+                  //         </Col>
+                  //       </Row>
+                  //     ))}
+                  //     <Button
+                  //       variant="primary"
+                  //       id="country"
+                  //       className="mt-3"
+                  //       size="sm"
+                  //       onClick={(e) => addDestination(e)}>
+                  //       Add Country
+                  //     </Button> */}
+                  // </Row>
+                }
+              </>
+
               // <>
               //   <label htmlFor="country">
               //     Country: <span className="required_field">*</span>
@@ -638,162 +876,6 @@ const App = () => {
               //     <span className="errorMsg">Select City</span>
               //   )}
               // </>
-              <>
-                {
-                  <Row className="row__container">
-                    <Col md={6}>
-                      <div className="input__container">
-                        <label>
-                          Country <span className="required_field">*</span>
-                        </label>
-                        <Controller
-                          name="country"
-                          control={control}
-                          render={({ field }) => (
-                            <CountrySelect
-                              {...field}
-                              required
-                              onChange={(e) => {
-                                field.onChange(e);
-                                setCountryid(e.id);
-                              }}
-                              placeHolder="Select Country"
-                            />
-                          )}
-                        />
-
-                        {countryid === 0 && (
-                          <span className="errorMsg">
-                            Select country from list
-                          </span>
-                        )}
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div className="input__container">
-                        <label>City 1</label>
-
-                        <Controller
-                          name="state"
-                          control={control}
-                          render={({ field }) => (
-                            <StateSelect
-                              {...field}
-                              countryid={countryid}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                setStateid(e.id);
-                              }}
-                              placeHolder="Select City"
-                            />
-                          )}
-                        />
-                      </div>
-                    </Col>
-
-                    {city.map((item, index) => (
-                      <Col md={6} key={index}>
-                        <div className="input__container mt-2">
-                          <label>City {index + 2}</label>
-                          <Controller
-                            name={`state-${index}`}
-                            control={control}
-                            render={({ field }) => (
-                              <StateSelect
-                                {...field}
-                                countryid={countryid}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  setStateid(e.id);
-                                }}
-                                placeHolder="Select City"
-                              />
-                            )}
-                          />
-                        </div>
-                      </Col>
-                    ))}
-
-                    <Row>
-                      <Col md={3}>
-                        <Button
-                          variant="primary"
-                          id="city"
-                          className="mt-3"
-                          size="sm"
-                          onClick={(e) => addDestination(e)}>
-                          Add City
-                        </Button>
-                      </Col>
-                    </Row>
-
-                    {/* {country.map((item, index) => (
-                        <Row className="row__container" key={index}>
-                          <Col md={6}>
-                            <div className="input__container">
-                              <label>
-                                Country{" "}
-                                <span className="required_field">*</span>
-                              </label>
-                              <Controller
-                                name={`country-${index}`}
-                                control={control}
-                                render={({ field }) => (
-                                  <CountrySelect
-                                    {...field}
-                                    required
-                                    onChange={(e) => {
-                                      field.onChange(e);
-                                      setCountryid(e.id);
-                                    }}
-                                    placeHolder="Select Country"
-                                  />
-                                )}
-                              />
-
-                              {countryid === 0 && (
-                                <span className="errorMsg">
-                                  Select country from list
-                                </span>
-                              )}
-                            </div>
-                          </Col>
-
-                          <Col md={6}>
-                            <div className="input__container">
-                              <label>City</label>
-
-                              <Controller
-                                name={`StateExta-${index}`}
-                                control={control}
-                                render={({ field }) => (
-                                  <StateSelect
-                                    {...field}
-                                    countryid={countryid}
-                                    onChange={(e) => {
-                                      field.onChange(e);
-                                      setStateid(e.id);
-                                    }}
-                                    placeHolder="Select City"
-                                  />
-                                )}
-                              />
-                            </div>
-                          </Col>
-                        </Row>
-                      ))}
-
-                      <Button
-                        variant="primary"
-                        id="country"
-                        className="mt-3"
-                        size="sm"
-                        onClick={(e) => addDestination(e)}>
-                        Add Country
-                      </Button> */}
-                  </Row>
-                }
-              </>
             )}
             <br />
 
@@ -1829,7 +1911,7 @@ const App = () => {
                     <Row className="row__container">
                       <p className="services">Conference Agenda</p>
                       <Row className="conf__agenda inin">
-                        <Col xs={2}>
+                        <Col xs={1}>
                           <p>Day</p>
                         </Col>
                         <Col xs={2}>
@@ -1839,7 +1921,7 @@ const App = () => {
                         <Col xs={2}>
                           <p>Time</p>
                         </Col>
-                        <Col xs={2}>
+                        <Col xs={5}>
                           <p>Activity</p>
                         </Col>
                       </Row>
@@ -1867,7 +1949,7 @@ const App = () => {
 
                         return (
                           <Row key={index}>
-                            <Col xs={2} className="conf__agenda">
+                            <Col xs={1} className="conf__agenda">
                               <p>{index + 1}</p>
                             </Col>
                             <Col xs={2} className="conf__agenda">
@@ -1879,7 +1961,7 @@ const App = () => {
                             <Col xs={2} className="conf__agenda">
                               <input type="time" placeholder="Time" />
                             </Col>
-                            <Col xs={2} className="conf__agenda">
+                            <Col xs={5} className="conf__agenda">
                               <input
                                 type="text"
                                 placeholder="Enter your Activity"
@@ -2108,12 +2190,14 @@ const App = () => {
                         }}>
                         Full Day
                       </label>
-                      <input
-                        type="text"
-                        name="totalFullDays"
-                        className="input__text"
-                        placeholder="Tot. Days"
-                      />
+                      {watchAllFields.FullDay == true && (
+                        <input
+                          type="text"
+                          name="totalFullDays"
+                          className="input__text"
+                          placeholder="Tot. Days"
+                        />
+                      )}
                     </div>
                   </Col>
                   <Col md={4}>
@@ -2131,6 +2215,7 @@ const App = () => {
                           />
                         )}
                       />
+
                       <label
                         style={{
                           marginLeft: "5px",
@@ -2138,12 +2223,16 @@ const App = () => {
                         }}>
                         Half Day
                       </label>
-                      <input
-                        type="text"
-                        name="totalHalfDays"
-                        className="input__text"
-                        placeholder="Tot. Days"
-                      />
+                      {watchAllFields.halfDay == true && (
+                        <>
+                          <input
+                            type="text"
+                            name="totalHalfDays"
+                            className="input__text"
+                            placeholder="Tot. Days"
+                          />
+                        </>
+                      )}
                     </div>
                   </Col>
 
@@ -2203,12 +2292,16 @@ const App = () => {
                       <label style={{ marginLeft: "5px", color: "black" }}>
                         Specify
                       </label>
-                      <input
-                        type="text"
-                        name="sightSeeingSpecify"
-                        className=""
-                        placeholder="Specify"
-                      />
+                      {watchAllFields.Specify == true && (
+                        <>
+                          <input
+                            type="text"
+                            name="sightSeeingSpecify"
+                            className=""
+                            placeholder="Specify"
+                          />
+                        </>
+                      )}
                     </div>
                   </Col>
 
