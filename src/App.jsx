@@ -26,6 +26,7 @@ import Theater from "./assets/Img/Theater.jpg";
 import UShaped from "./assets/Img/U-Shape.jpg";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import Button from "react-bootstrap/Button";
+import Spinner from "react-bootstrap/Spinner";
 
 const App = () => {
   const MySwal = withReactContent(Swal);
@@ -42,7 +43,8 @@ const App = () => {
   const [city, setCity] = useState([]);
   const [country, setCountry] = useState([]);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [selectedOptionDeparture, setSelectedDepartue] = useState(null);
+  // const [selectedOptionDeparture, setSelectedDepartue] = useState(null);
+  const [selectedOptionDeparture, setSelectedDepartue] = useState([]);
 
   const form = useRef();
   const {
@@ -73,6 +75,7 @@ const App = () => {
   //  For Country and city in select bos
   const addDestination = () => {
     setCountryList((prev) => [...prev, prev.length]);
+    setCountry;
   };
 
   const handleCountryChange = async (index, country) => {
@@ -213,17 +216,171 @@ const App = () => {
     "Rajahmundry",
     "Ballari",
     "Agartala",
+    ...Array.from(Array(1000), (_, index) => String(index + 1)),
+  ];
+  const nationalCity = [
+    "Mumbai",
+    "Delhi",
+    "Bangalore",
+    "Kolkata",
+    "Chennai",
+    "Hyderabad",
+    "Ahmedabad",
+    "Pune",
+    "Surat",
+    "Jaipur",
+    "Lucknow",
+    "Kanpur",
+    "Nagpur",
+    "Indore",
+    "Thane",
+    "Bhopal",
+    "Visakhapatnam",
+    "Pimpri-Chinchwad",
+    "Patna",
+    "Vadodara",
+    "Ghaziabad",
+    "Ludhiana",
+    "Agra",
+    "Nashik",
+    "Faridabad",
+    "Meerut",
+    "Rajkot",
+    "Kalyan-Dombivli",
+    "Vasai-Virar",
+    "Varanasi",
+    "Srinagar",
+    "Aurangabad",
+    "Dhanbad",
+    "Amritsar",
+    "Navi Mumbai",
+    "Allahabad",
+    "Ranchi",
+    "Haora",
+    "Coimbatore",
+    "Jabalpur",
+    "Gwalior",
+    "Vijayawada",
+    "Jodhpur",
+    "Madurai",
+    "Raipur",
+    "Kota",
+    "Guwahati",
+    "Chandigarh",
+    "Solapur",
+    "Hubli-Dharwad",
+    "Bareilly",
+    "Moradabad",
+    "Mysore",
+    "Gurgaon",
+    "Aligarh",
+    "Jalandhar",
+    "Tiruchirappalli",
+    "Bhubaneswar",
+    "Salem",
+    "Warangal",
+    "Guntur",
+    "Bhiwandi",
+    "Saharanpur",
+    "Gorakhpur",
+    "Bikaner",
+    "Amravati",
+    "Noida",
+    "Jamshedpur",
+    "Bhilai",
+    "Cuttack",
+    "Firozabad",
+    "Kochi",
+    "Nellore",
+    "Bhavnagar",
+    "Dehradun",
+    "Durgapur",
+    "Asansol",
+    "Rourkela",
+    "Nanded",
+    "Kolhapur",
+    "Ajmer",
+    "Akola",
+    "Gulbarga",
+    "Jamnagar",
+    "Ujjain",
+    "Loni",
+    "Siliguri",
+    "Jhansi",
+    "Ulhasnagar",
+    "Nellore",
+    "Jammu",
+    "Sangli-Miraj & Kupwad",
+    "Belgaum",
+    "Mangalore",
+    "Ambattur",
+    "Tirunelveli",
+    "Malegaon",
+    "Gaya",
+    "Jalgaon",
+    "Udaipur",
+    "Maheshtala",
+    "Tirupur",
+    "Davanagere",
+    "Kozhikode",
+    "Akola",
+    "Kurnool",
+    "Bokaro Steel City",
+    "Rajahmundry",
+    "Ballari",
+    "Agartala",
   ];
 
-  const option = cities.map((city) => ({
+  const option = nationalCity.map((city) => ({
     value: city.toLowerCase().replace(/ /g, "-"),
     label: city,
   }));
+  // Departure City
 
   const departureCity = cities.map((city) => ({
     value: city.toLowerCase().replace(/ /g, "-"),
     label: city,
   }));
+
+  // const createOptions = (multiplier) => {
+  //   let options = [];
+  //   for (let i = 0; i < multiplier; i++) {
+  //     options = [
+  //       ...options,
+  //       ...cities.map((city) => {
+  //         ({
+  //           value: `${city.toLowerCase().replace(/ /g, "-")}-${i}`,
+  //           label: city,
+  //         });
+  //       }),
+  //     ];
+  //   }
+  //   return options;
+  // };
+  //
+  // const numbers = Array.from({ length: 1000 }, (_, i) => (i + 1).toString());
+
+  // const createOptions = (iteration) => {
+  //   const cityOptions = cities.map((city) => ({
+  //     value: city.toLowerCase().replace(/ /g, "-"),
+  //     label: city,
+  //   }));
+  //   let numberOptions;
+  //   for (let i = 0; i < iteration; i++) {
+  //     numberOptions = numbers.map((number) => ({
+  //       value: number,
+  //       label: number,
+  //     }));
+  //   }
+  //   console.log(numberOptions);
+  //   return [...cityOptions, ...numberOptions];
+  // };
+
+  // const departureCityd = createOptions(5); // Creates options 5 times to allow multiple selections
+
+  // const handleChange = (selected) => {
+  //   setSelectedDepartue(selected);
+  // };
   const startDate = new Date(watchAllFields.conferenceStartDate);
 
   const areaInMeter = watchAllFields.conferenceArea * 0.092903;
@@ -292,66 +449,131 @@ const App = () => {
   );
 
   const onSubmit = (data) => {
+    console.log("chutia");
     if (
       !watchAllFields.travelBooking &&
       !watchAllFields.hotelArrangements &&
-      !watchAllFields.conferences &&
+      !watchAllFields.landArrangement &&
       !watchAllFields.event
     ) {
       alert("Please select the Services");
       return;
     }
-    console.log(data);
-    setLoading(true);
-    const googleSheetData = {
+    // console.log(data, "data");
+    // MySwal.fire({
+    //   icon: "success",
+    //   title:
+    //     "Thank you for submitting your information. We will connect you soon",
+    // });
+
+    let googleSheetData = {
       GroupType: data.groupType,
       BookingCategory: data.bookingCategory,
+      CompanyName: data.company__name,
       Name: data.name,
       Email: data.email,
       Phone: data.phone,
       Place: data.destination,
-      NationalCity: data.nationalaCity,
-      Country: data.country.name,
-      City: data.state.name,
       CheckBoxTravelBooking: data.travelBooking,
       CheckBoxHotelArrangements: data.hotelArrangements,
+      CheckBoxLandArrangements: data.landArrangement,
       CheckBoxEvent: data.event,
-      CheckBoxConference: data.conferences,
       TravelBookingType: data.travelBookingType,
       TotaxPax: data.totalPax,
-      DepartureCity: data.departureCity,
+
       PreferedAirlines: data.preferedAirlines,
       PreferredArrivalTime: data.preferedArrivalTime,
       PreferredDepartureTime: data.preferedDepartureTime,
       BussinessClassPax: data.anyBussinessClassPax,
       PurposeOfTravle: data.purposeOfTravel,
       Period: data.period,
-      Duration: data.duration,
+      HotelDuration: data.hotelDuration,
       GroupSize: data.groupSize,
       ApproxDBL: data.approxDBL,
       ApproxSGL: data.approxSGL,
-      hotelCategory: data.hotelCategory,
+      HotelCategory: data.hotelCategory,
+      HotelRoomType: data.roomType,
+      UpgradeComp: data.upgrade__comp,
+      UpgradePaid: data.upgrade__Paid,
       ConferenceHall: data.conferenceHall,
+      HallInSqFt: data.squareFeet,
+      HallInSqMtr: data.squareMeters,
+      ConferenceDuration: data.duration,
+      SetUpDate: data.setUpDate,
+      conferenceStartDate: data.conferenceStartDate,
+      conferenceEndDate: data.conferenceEndDate,
       SeatingRound: data.RoundTable,
       SeatingHalfMoon: data.HalfMoon,
       SeatingClassroom: data.ClassRoom,
       SeatingTheatre: data.Theatre,
       SeatingUshape: data.UShape,
-      SeatingCockTail: data.Cocltail,
+      SeatingCockTail: data.Cocktail,
       SeatingOther: data.Others,
-      AirportTransfer: data.airportTransfers,
-      SightSeeingOneDay: data.OneDay,
-      SightSeeingTwoHalfDay: data.TwoHalfDay,
-      SightSeeingTwoFullDay: data.TwoFullDay,
+
+      AirportArrivalTransfers: data.airportArrivalTransfers,
+      AirportArrivalDate: data.arrvilaDate,
+      AirportTime: data.departureTime,
+
+      AirportDepartureTransfers: data.airportDepartureTrans,
+      AirportDepartureDate: data.departureDate,
+      AirportDepartureTime: data.arrvilTime,
+
+      SightSeeingFullDay: data.FullDay,
+      SightSeeingTotDaysFull: data.totalFullDaysSightSeeing,
+
+      SightSeeingHalfDay: data.halfDay,
+      SightSeeingTotDaysHalf: data.totalHalfDaysSightSeeing,
+
       SightSeeingAllPopularSite: data.AllPopularSites,
-      SightSeeingOthers: data.Others,
-      GalaDinner: data.galaDinner,
-      GalaDinnerDate: data.galaDinnerDate,
-      DjLightSound: data.DjLightSound,
-      LunchIndianRestaurantCount: data.LunchIndianRestaurantCount,
-      Dinner: data.Dinners,
-      DinnerSize: data.dinnerSize,
+      SightSeeingSpecify: data.Specify,
+      SightSeeingSpeciytDetails: data.sightSeeingSpecify,
+      // GalaDinner: data.galaDinner,
+      // GalaDinnerDate: data.galaDinnerDate,
+      // DjLightSound: data.DjLightSound,
+      // LunchIndianRestaurantCount: data.LunchIndianRestaurantCount,
+      // Dinner: data.Dinners,
+      // DinnerSize: data.dinnerSize,
     };
+    // console.log(data);
+    // for adding Country and city list
+    if (data.destination == "international") {
+      for (let i = 0; i < countryList.length; i++) {
+        let index = i.toString();
+        let cityValue = "cityValue" + index;
+        let countryValue = "countryValue" + index;
+        let cityName = data[`state-${i}`].map((item) => item.value).join(", ");
+
+        googleSheetData[countryValue] = data[`country-${i}`].name;
+        googleSheetData[cityValue] = cityName;
+      }
+    }
+
+    if (data.travelBooking && data.travelBookingType == "Flight") {
+      const departureCityTotPax = data.departureCityTotPax
+        .map((item) => item.value)
+        .join(", ");
+      googleSheetData.departureCityTotalPax = departureCityTotPax;
+    }
+    if (data.destination == "national") {
+      const national__city = data.national__city
+        .map((item) => item.value)
+        .join(", ");
+      googleSheetData.nationals = national__city;
+    }
+
+    if (data.conferenceHall == "Yes") {
+      for (let i = 0; i < data.duration; i++) {
+        let index = i.toString();
+        let conferenceTime = "conferenceTime" + index;
+        let conferenceActivity = "conferenceActivity" + index;
+        googleSheetData[conferenceTime] = data[`ConferenceAgendaTime-${i}`];
+        googleSheetData[conferenceActivity] =
+          data[`ConferenceAgendaActivity-${i}`];
+      }
+    }
+
+    console.log(googleSheetData, "hello here is my data");
+    setLoading(true);
     axios
       .post(import.meta.env.VITE_BOOKING_REQUEST, googleSheetData)
       .then((response) => {
@@ -363,7 +585,7 @@ const App = () => {
         });
         setTimeout(() => {
           setLoading(false);
-          reset();
+          // reset();
         }, 1000);
       })
       .catch((error) => {
@@ -375,7 +597,7 @@ const App = () => {
         console.error("Error fetching data:", error);
         setTimeout(() => {
           setLoading(false);
-          reset();
+          // reset();
         }, 1000 * 2);
       });
   };
@@ -453,33 +675,23 @@ const App = () => {
             <Row className="row__container">
               <Col md={3}>
                 <div className="input__container">
-                  <label htmlFor="name">
+                  <label htmlFor="company__name">
                     Company Name <span className="required_field">*</span>
                   </label>
                   <input
                     type="text"
-                    id="name"
+                    id="company__name"
                     placeholder="Company Name"
                     className="input-element"
-                    name="name"
-                    {...register("name", {
-                      required: "Name is required.",
-                      pattern: {
-                        value: /^[a-zA-Z ]*$/,
-                        message: "Enter Valid Name",
-                      },
-                      minLength: {
-                        value: 3,
-                        message: "Name should be at least 3 characters.",
-                      },
-                      maxLength: {
-                        value: 30,
-                        message: "Name should be maximum 30 characters.",
-                      },
+                    name="company__name"
+                    {...register("company__name", {
+                      required: "Company name is required.",
                     })}
                   />
-                  {errors.name && (
-                    <span className="errorMsg">{errors.name.message}</span>
+                  {errors.company__name && (
+                    <span className="errorMsg">
+                      {errors.company__name.message}
+                    </span>
                   )}
                 </div>
               </Col>
@@ -504,10 +716,6 @@ const App = () => {
                       minLength: {
                         value: 3,
                         message: "Name should be at least 3 characters.",
-                      },
-                      maxLength: {
-                        value: 30,
-                        message: "Name should be maximum 30 characters.",
                       },
                     })}
                   />
@@ -596,40 +804,64 @@ const App = () => {
             {watchAllFields.destination === "national" && (
               <Row className="row__container">
                 <Col md={12}>
-                  <div className="input__container">
-                    <label htmlFor="cities">
-                      Select a city <span className="required_field">*</span>
-                    </label>
-                    <Select
-                      defaultValue={selectedOption}
-                      onChange={setSelectedOption}
-                      options={option}
-                      isMulti
-                    />
-                    {/* <select
-                      id="cities"
-                      className="input-element"
-                      multiple
-                      size="2"
-                      name="nationalaCity"
-                      value={selectedCity}
-                      {...register("nationalaCity", {
-                        required: "select cities",
-                      })}
-                      onChange={handleCityChange}>
-                      <option value="">Select City</option>
-                      {cities.map((city, index) => (
-                        <option key={index} value={city}>
-                          {city}
-                        </option>
-                      ))}
-                    </select> */}
-                    {errors.nationalaCity && (
-                      <span className="errorMsg">
-                        {errors.nationalaCity.message}
-                      </span>
-                    )}
-                  </div>
+                  <Row className="row__container">
+                    <Col md={12}>
+                      <div className="input__container">
+                        <label htmlFor="cities">
+                          Select a city
+                          <span className="required_field">*</span>
+                        </label>
+
+                        <Controller
+                          name="national__city"
+                          control={control}
+                          rules={{ required: "City is required" }}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              options={option}
+                              isMulti
+                              onChange={(selected) => {
+                                field.onChange(selected);
+                                setSelectedOption(selected);
+                                if (selected) {
+                                  clearErrors("national__city");
+                                }
+                              }}
+                              value={selectedOption}
+                            />
+                          )}
+                        />
+                        {errors.national__city && (
+                          <span className="errorMsg">
+                            {errors.national__city.message}
+                          </span>
+                        )}
+                        {/* <Controller
+                          name="national__city"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              defaultValue={selectedOption}
+                              onChange={setSelectedOption}
+                              {...register("national__city", {
+                                required: "City is required",
+                              })}
+                              options={option}
+                              isMulti
+                            />
+                          )}
+                        />
+
+                        {errors.national__city && (
+                          <span className="errorMsg">
+                            {errors.national__city.message}
+                          </span>
+                        )} */}
+                      </div>
+                    </Col>
+                  </Row>
                 </Col>
               </Row>
             )}
@@ -649,6 +881,9 @@ const App = () => {
                           render={({ field }) => (
                             <CountrySelect
                               {...field}
+                              {...register(`country-${index}`, {
+                                required: "Select country from list",
+                              })}
                               onChange={(e) => {
                                 field.onChange(e);
                                 handleCountryChange(index, e);
@@ -657,11 +892,16 @@ const App = () => {
                             />
                           )}
                         />
+                        {errors[`country-${index}`] && (
+                          <span className="errorMsg">
+                            {errors[`country-${index}`].message}
+                          </span>
+                        )}
                       </div>
                     </Col>
                     <Col md={6}>
                       <div className="input__container">
-                        <label>State </label>
+                        <label>City </label>
                         <Controller
                           name={`state-${index}`}
                           control={control}
@@ -669,15 +909,23 @@ const App = () => {
                             <Select
                               {...field}
                               options={statesMap[index]}
+                              {...register(`state-${index}`, {
+                                required: "Select city from list",
+                              })}
                               isMulti
                               className="input-element-state"
                               onChange={(selectedOptions) => {
                                 field.onChange(selectedOptions);
                               }}
-                              placeholder="Select State"
+                              placeholder="Select state from list"
                             />
                           )}
                         />
+                        {errors[`state-${index}`] && (
+                          <span className="errorMsg">
+                            {errors[`state-${index}`].message}
+                          </span>
+                        )}
                       </div>
                     </Col>
                   </Row>
@@ -1023,6 +1271,7 @@ const App = () => {
               {isSubmitClicked &&
               !watchAllFields.travelBooking &&
               !watchAllFields.hotelArrangements &&
+              !watchAllFields.landArrangement &&
               !watchAllFields.event ? (
                 <>
                   <br />
@@ -1097,15 +1346,53 @@ const App = () => {
                     <Col md={6}>
                       <div className="input__container">
                         <label htmlFor="departureCity">
-                          Departure City{" "}
+                          Departure City / No of Pax.
                           <span className="required_field">*</span>
                         </label>
-                        <Select
+
+                        <Controller
+                          name="departureCityTotPax"
+                          control={control}
+                          rules={{
+                            required: "Select city and Tol. pax from list",
+                          }}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              options={departureCity}
+                              isMulti
+                              onChange={(selected) => {
+                                field.onChange(selected);
+                                setSelectedDepartue(selected);
+                                if (selected) {
+                                  clearErrors("departureCityTotPax");
+                                }
+                              }}
+                              value={selectedOptionDeparture}
+                            />
+                          )}
+                        />
+                        {errors.departureCityTotPax && (
+                          <span className="errorMsg">
+                            {errors.departureCityTotPax.message}
+                          </span>
+                        )}
+
+                        {/* <Select
+                          isMulti
+                          name="departureCityTotPax"
+                          {...register("departureCityTotPax", {
+                            required: "Select city and Tol. pax from list",
+                          })}
                           defaultValue={selectedOptionDeparture}
                           onChange={setSelectedDepartue}
                           options={departureCity}
-                          isMulti
                         />
+                        {errors.departureCityTotPax && (
+                          <span className="errorMsg">
+                            {errors.departureCityTotPax.message}
+                          </span>
+                        )} */}
                       </div>
                     </Col>
                   </Row>
@@ -1119,7 +1406,7 @@ const App = () => {
                           type="text"
                           className="input-element"
                           id="preferedAirline"
-                          placeholder="Departure City"
+                          placeholder="Preferred Airlines"
                           name="preferedAirline"
                           {...register("preferedAirline")}
                         />
@@ -1293,7 +1580,7 @@ const App = () => {
                 <Row className="row__container">
                   <Col md={6}>
                     <div className="input__container">
-                      <label htmlFor="duration">
+                      <label htmlFor="hotelDuration">
                         Duration <span className="required_field">*</span>
                       </label>
                       <input
@@ -1301,7 +1588,7 @@ const App = () => {
                         id="hotelDuration"
                         placeholder="Duration. ex 5 nights "
                         className="input-element"
-                        name="duration"
+                        name="hotelDuration"
                         {...register("hotelDuration", {
                           required: "Enter Duration ex. 5 nights ",
                         })}
@@ -1458,8 +1745,6 @@ const App = () => {
                         {...register("upgrade__comp", {
                           required: "Select from list",
                         })}>
-                        Club Room / Jr.Suite / Suite/Dlx Suite / Pres Suite /
-                        Other
                         <option value="">--Select--</option>
                         <option value="ClubRoom">Club Room </option>
                         <option value="JrSuite">Jr.Suite</option>
@@ -1539,6 +1824,7 @@ const App = () => {
                           <label>Area in Square Feet</label>
                           <Controller
                             name="squareFeet"
+                            {...register("squareFeet")}
                             control={control}
                             render={({ field }) => (
                               <input
@@ -1561,6 +1847,7 @@ const App = () => {
                           <Controller
                             name="squareMeters"
                             control={control}
+                            {...register("squareMeters")}
                             render={({ field }) => (
                               <input
                                 {...field}
@@ -1668,9 +1955,9 @@ const App = () => {
                             })}
                           />
 
-                          {errors.setUpDate && (
+                          {errors.conferenceStartDate && (
                             <span className="errorMsg">
-                              {errors.setUpDate.message}
+                              {errors.conferenceStartDate.message}
                             </span>
                           )}
                         </div>
@@ -1959,13 +2246,45 @@ const App = () => {
                               <p>{dayName}</p>
                             </Col>
                             <Col xs={2} className="conf__agenda">
-                              <input type="time" placeholder="Time" />
+                              <input
+                                type="time"
+                                placeholder="Time"
+                                name={`ConferenceAgendaTime-${index}`}
+                                {...register(`ConferenceAgendaTime-${index}`, {
+                                  required: "Enter Time",
+                                })}
+                              />
+
+                              {errors[`ConferenceAgendaTime-${index}`] && (
+                                <span className="errorMsg">
+                                  {
+                                    errors[`ConferenceAgendaTime-${index}`]
+                                      .message
+                                  }
+                                </span>
+                              )}
                             </Col>
                             <Col xs={5} className="conf__agenda">
                               <input
                                 type="text"
+                                name={`ConferenceAgendaActivity-${index}`}
                                 placeholder="Enter your Activity"
+                                {...register(
+                                  `ConferenceAgendaActivity-${index}`,
+                                  {
+                                    required: "Enter your activity",
+                                  }
+                                )}
                               />
+                              <br />
+                              {errors[`ConferenceAgendaActivity-${index}`] && (
+                                <span className="errorMsg">
+                                  {
+                                    errors[`ConferenceAgendaActivity-${index}`]
+                                      .message
+                                  }
+                                </span>
+                              )}
                             </Col>
                           </Row>
                         );
@@ -2190,13 +2509,34 @@ const App = () => {
                         }}>
                         Full Day
                       </label>
-                      {watchAllFields.FullDay == true && (
-                        <input
-                          type="text"
-                          name="totalFullDays"
-                          className="input__text"
-                          placeholder="Tot. Days"
-                        />
+                      {watchAllFields.FullDay && (
+                        <>
+                          <>
+                            <input
+                              type="text"
+                              name="totalFullDaysSightSeeing"
+                              className="input__text"
+                              {...register("totalFullDaysSightSeeing")}
+                              placeholder="Specify"
+                            />
+                          </>
+                          {/* <input
+                            type="text"
+                            name="totalFullDaysSightSeeing"
+                            className="input__text"
+                            placeholder="Tot. Days"
+                            {...register("totalFullDaysSightSeeing", {
+                              required: "Enter Tot. days",
+                            })}
+                          />
+                          <div>
+                            {errors.totalFullDaysSightSeeing && (
+                              <span className="errorMsg">
+                                {errors.totalFullDaysSightSeeing.message}
+                              </span>
+                            )}
+                          </div> */}
+                        </>
                       )}
                     </div>
                   </Col>
@@ -2227,9 +2567,10 @@ const App = () => {
                         <>
                           <input
                             type="text"
-                            name="totalHalfDays"
+                            name="totalHalfDaysSightSeeing"
                             className="input__text"
                             placeholder="Tot. Days"
+                            {...register("totalHalfDaysSightSeeing")}
                           />
                         </>
                       )}
@@ -2297,7 +2638,7 @@ const App = () => {
                           <input
                             type="text"
                             name="sightSeeingSpecify"
-                            className=""
+                            {...register("sightSeeingSpecify")}
                             placeholder="Specify"
                           />
                         </>
@@ -2309,7 +2650,7 @@ const App = () => {
                   !watchAllFields.FullDay &&
                   !watchAllFields.halfDay &&
                   !watchAllFields.AllPopularSites &&
-                  !watchAllFields.otherSite ? (
+                  !watchAllFields.Specify ? (
                     <>
                       <br />
                       <span className="errorMsg">
@@ -2603,13 +2944,64 @@ const App = () => {
                 </div>
               </Col>
             </Row> */}
+            {/* 
+            // International Country
+country-0
+: 
+{id: 1, name: 'Afghanistan', iso3: 'AFG', iso2: 'AF', numeric_code: '004', …}
+country-1
+: 
+{id: 4, name: 'Algeria', iso3: 'DZA', iso2: 'DZ', numeric_code: '012', …}
+departureCityTotPax
+
+: 
+
+// Departure City
+Array(2)
+0
+: 
+{value: 'kolkata', label: 'Kolkata'}
+1
+: 
+{value: '21', label: '21'}
+length
+:  
+2
+[[Prototype]]
+: 
+Array(0) */}
+            {/* international city */}
+            {/* 
+state-0
+: 
+Array(1)
+0
+: 
+{value: 'Badghis', label: 'Badghis'}
+length
+: 
+1
+[[Prototype]]
+: 
+Array(0)
+state-1
+: 
+[{…}] */}
 
             <button
               type="submit"
               className="btn submit_btn"
               onClick={errorhandle}>
-              {loading ? "Loading..." : "Submit"}
+              {loading ? "submitting..." : "Submit"}
             </button>
+            {loading && (
+              <Spinner
+                animation="grow"
+                size="md"
+                className="loading_symbol"
+                variant="light"
+              />
+            )}
           </form>
         </Container>
       </main>
