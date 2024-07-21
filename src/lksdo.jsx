@@ -1,16 +1,9 @@
-import { useForm, Controller } from "react-hook-form";
-import { useRef, useState } from "react";
+import { Row, Col, Container } from "react-bootstrap";
+import { useState } from "react";
 import Select from "react-select";
-import { CountrySelect, StateSelect } from "react-country-state-city";
-import "react-country-state-city/dist/react-country-state-city.css";
-import { Row, Col } from "react-bootstrap";
-import Button from "react-bootstrap/Button";
+import { useForm, Controller } from "react-hook-form";
 
-const Isdo = () => {
-  const [countries, setCountries] = useState([]); // Array to store countries
-
-  const form = useRef();
-
+const Iksdo = () => {
   const {
     register,
     handleSubmit,
@@ -22,102 +15,123 @@ const Isdo = () => {
     watch,
     reset,
   } = useForm({
-    defaultValues: { countries: [] }, // Set default value for countries
+    defaultValues: {},
   });
 
-  const watchAllFields = watch();
+  const [rows, setRows] = useState([
+    { gitCity: [], totlaPaxGit: "", Remarks: "" },
+  ]);
 
-  const handleAddCountry = () => {
-    setCountries((prevCountries) => [
-      ...prevCountries,
-      { country: "", states: [] },
-    ]);
-  };
+  const nationalCity = [
+    "Mumbai",
+    "Delhi",
+    "Bangalore",
+    "Kolkata",
+    "Chennai",
+    "Hyderabad",
+    "Ahmedabad",
+  ];
 
-  const handleCountryChange = (selectedCountry, index) => {
-    setCountries((prevCountries) => {
-      const updatedCountries = [...prevCountries];
-      updatedCountries[index].country = selectedCountry.value;
-      return updatedCountries;
-    });
-  };
+  const optionVisaCity = nationalCity.map((city) => ({
+    value: city.toLowerCase().replace(/ /g, "-"),
+    label: city,
+  }));
 
-  const handleStateChange = (selectedState, index) => {
-    setCountries((prevCountries) => {
-      const updatedCountries = [...prevCountries];
-      // Update states within the corresponding country object
-      updatedCountries[index].states = selectedState || []; // Allow clearing states
-      return updatedCountries;
-    });
+  const addEntireRowFunction = () => {
+    setRows([...rows, { gitCity: [], totlaPaxGit: "", Remarks: "" }]);
   };
 
   return (
-    <Row className="row__container">
-      {/* Country and State Selection for each country */}
-      {countries.map((country, index) => (
+    <div>
+      {rows.map((row, index) => (
         <Row key={index} className="row__container">
-          <Col md={6}>
+          <Col md={4}>
             <div className="input__container">
-              <label>
-                Country <span className="required_field">*</span>
-              </label>
+              <label htmlFor={`visaApplyFrom${index}`}>Apply From</label>
               <Controller
-                name={`countries[${index}].country`}
+                name={`visaApplyFrom${index}`}
                 control={control}
-                render={({ field }) => (
-                  <CountrySelect
-                    {...field}
-                    required
-                    onChange={(e) => handleCountryChange(e, index)}
-                  />
-                )}
-              />
-              {errors[`countries[${index}].country`] && (
-                <span className="errorMsg">Select country from list</span>
-              )}
-            </div>
-          </Col>
-          <Col md={6}>
-            <div className="input__container">
-              <label>State(s)</label>
-              <Controller
-                name={`countries[${index}].states`}
-                control={control}
+                rules={{ required: "City is required" }}
                 render={({ field }) => (
                   <Select
                     {...field}
+                    options={optionVisaCity}
                     isMulti
-                    options={
-                      country.country
-                        ? StateSelect.getStates(country.country)
-                        : []
-                    } // Dynamic options based on selected country
-                    onChange={(selectedState) =>
-                      handleStateChange(selectedState, index)
-                    }
-                    placeholder="Select State(s)"
+                    onChange={(selected) => {
+                      field.onChange(selected);
+                      const newRows = [...rows];
+                      newRows[index].gitCity = selected;
+                      setRows(newRows);
+                      if (selected) {
+                        clearErrors(`visaApplyFrom${index}`);
+                      }
+                    }}
+                    value={row.gitCity}
                   />
                 )}
               />
+              {errors[`visaApplyFrom${index}`] && (
+                <span className="errorMsg">
+                  {errors[`visaApplyFrom${index}`].message}
+                </span>
+              )}
+            </div>
+          </Col>
+
+          <Col md={4}>
+            <div className="input__container">
+              <label htmlFor={`totlaPaxGit${index}`}>
+                No of Pax <span className="required_field">*</span>
+              </label>
+              <input
+                type="text"
+                id={`totlaPaxGit${index}`}
+                className="input-element"
+                placeholder="Number of Pax"
+                name={`totlaPaxGit${index}`}
+                {...register(`totlaPaxGit${index}`, {
+                  required: "Total No of Pax",
+                  pattern: {
+                    value: /^[0-9]+$/,
+                    message: "Enter Valid no",
+                  },
+                })}
+              />
+              {errors[`totlaPaxGit${index}`] && (
+                <span className="errorMsg">
+                  {errors[`totlaPaxGit${index}`].message}
+                </span>
+              )}
+            </div>
+          </Col>
+
+          <Col md={4}>
+            <div className="input__container">
+              <label htmlFor={`Remarks${index}`}>
+                Remarks <span className="required_field">*</span>
+              </label>
+              <input
+                type="text"
+                id={`Remarks${index}`}
+                className="input-element"
+                placeholder="Remarks"
+                name={`Remarks${index}`}
+                {...register(`Remarks${index}`, {
+                  required: "Enter your remarks here",
+                })}
+              />
+              {errors[`Remarks${index}`] && (
+                <span className="errorMsg">
+                  {errors[`Remarks${index}`].message}
+                </span>
+              )}
             </div>
           </Col>
         </Row>
       ))}
-
-      <Row>
-        <Col xs={4}>
-          <Button
-            variant="primary"
-            id="country"
-            className="mt-3"
-            size="sm"
-            onClick={handleAddCountry}>
-            Add Country
-          </Button>
-        </Col>
-      </Row>
-    </Row>
+      <button onClick={addEntireRowFunction}>Add Row</button>
+    </div>
   );
 };
 
-export default Isdo;
+export default Iksdo;

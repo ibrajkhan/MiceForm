@@ -1,10 +1,28 @@
-import { useState } from "react";
-import Select, { components } from "react-select";
+import { Row, Col, Container } from "react-bootstrap";
+import { useEffect, useRef, useState } from "react";
+import Select from "react-select";
+import { useForm, Controller } from "react-hook-form";
 
 const Isdo = () => {
-  const [selectedOptions, setSelectedOptions] = useState([]);
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors },
+    setError,
+    clearErrors,
+    watch,
+    reset,
+  } = useForm({
+    defaultValues: {},
+  });
 
-  const cities = [
+  const watchAllFields = watch();
+
+  const [gitCity, setGitCity] = useState([]);
+
+  const nationalCity = [
     "Mumbai",
     "Delhi",
     "Bangalore",
@@ -12,69 +30,94 @@ const Isdo = () => {
     "Chennai",
     "Hyderabad",
     "Ahmedabad",
-    "Pune",
-    "Davanagere",
-    "Kozhikode",
-    "Akola",
-    "Kurnool",
-    "Bokaro Steel City",
-    "Rajahmundry",
-    "Ballari",
-    "Agartala",
   ];
 
-  const numbers = Array.from({ length: 1000 }, (_, i) => (i + 1).toString());
+  const optionVisaCity = nationalCity.map((city) => ({
+    value: city.toLowerCase().replace(/ /g, "-"),
+    label: city,
+  }));
 
-  const createOptions = () => {
-    const cityOptions = cities.map((city) => ({
-      value: city.toLowerCase().replace(/ /g, "-"),
-      label: city,
-    }));
-    const numberOptions = numbers.map((number) => ({
-      value: number,
-      label: number,
-    }));
-    return [...cityOptions, ...numberOptions];
-  };
-
-  const departureCity = createOptions();
-
-  const handleChange = (selected) => {
-    setSelectedOptions(selected);
-  };
-
-  const customComponents = {
-    MultiValue: ({ data }) => (
-      <div>
-        {data.map((option, index) => (
-          <span key={index} className="multi-value">
-            {option.label}
-          </span>
-        ))}
-      </div>
-    ),
-    Option: ({ children, ...props }) => (
-      <components.Option {...props}>
-        {children} <span style={{ marginLeft: "10px" }}>+</span>
-      </components.Option>
-    ),
-  };
+  const addEntireRowFunction = () => {};
 
   return (
     <div>
-      <div className="input__container">
-        <label htmlFor="departureCity">
-          Departure City
-          <span className="required_field">*</span>
-        </label>
-        <Select
-          isMulti
-          options={departureCity}
-          value={selectedOptions}
-          onChange={handleChange}
-          components={customComponents}
-        />
-      </div>
+      <Row className="row__container ">
+        <Col md={4}>
+          <div className="input__container">
+            <label htmlFor="visaApplyFrom">Apply From</label>
+            <Controller
+              name="visaApplyFrom"
+              control={control}
+              rules={{ required: "City is required" }}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={optionVisaCity}
+                  isMulti
+                  onChange={(selected) => {
+                    field.onChange(selected);
+                    setGitCity(selected);
+                    if (selected) {
+                      clearErrors("visaApplyFrom");
+                    }
+                  }}
+                  value={gitCity}
+                />
+              )}
+            />
+            {errors.visaApplyFrom && (
+              <span className="errorMsg">{errors.visaApplyFrom.message}</span>
+            )}
+          </div>
+        </Col>
+
+        <Col md={4}>
+          <div className="input__container">
+            <label htmlFor="totlaPaxGit">
+              No of Pax <span className="required_field">*</span>
+            </label>
+            <input
+              type="text"
+              id="totlaPaxGit"
+              className="input-element"
+              placeholder="Number of Pax"
+              name="totlaPaxGit"
+              {...register("totlaPaxGit", {
+                required: "Total No of Pax",
+                pattern: {
+                  value: /^[0-9]+$/,
+                  message: "Enter Valid no",
+                },
+              })}
+            />
+            {errors.totlaPaxGit && (
+              <span className="errorMsg">{errors.totlaPaxGit.message}</span>
+            )}
+          </div>
+        </Col>
+
+        <Col md={4}>
+          <div className="input__container">
+            <label htmlFor="familyName">
+              Remarks <span className="required_field">*</span>
+            </label>
+            <input
+              type="text"
+              id="Remarks"
+              className="input-element"
+              placeholder="Remarks"
+              name="Remarks"
+              {...register("Remarks", {
+                required: "Enter your remarks here",
+              })}
+            />
+            {errors.Remarks && (
+              <span className="errorMsg">{errors.Remarks.message}</span>
+            )}
+          </div>
+        </Col>
+      </Row>
+      <button onClick={addEntireRowFunction}>Add Column</button>
     </div>
   );
 };
