@@ -6,6 +6,8 @@ import Select from "react-select";
 
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import Stack from "react-bootstrap/Stack";
+
 import {
   CitySelect,
   CountrySelect,
@@ -27,6 +29,8 @@ import UShaped from "./assets/Img/U-Shape.jpg";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import Button from "react-bootstrap/Button";
 import Spinner from "react-bootstrap/Spinner";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const App = () => {
   const MySwal = withReactContent(Swal);
@@ -46,9 +50,10 @@ const App = () => {
   const [manPower, setmanPower] = useState(null);
   // const [selectedOptionDeparture, setSelectedDepartue] = useState(null);
   const [selectedOptionDeparture, setSelectedDepartue] = useState([]);
-  const [selectedUpgradPaid, setUpgradePaid] = useState([]);
-  const [selectedUpgradComp, setUpgradeComp] = useState([]);
+
   const [selectedManpower, setManPowerUpgrade] = useState([]);
+  const [selectMealPlan, setSelectMealPlan] = useState([]);
+  const [selectMealRate, setSelectMealRate] = useState([]);
 
   const [selectedGroupVisas, setSelectedGroupVisas] = useState(null);
 
@@ -60,6 +65,11 @@ const App = () => {
   const [cityValidVisaFit, setCityValidVisaFit] = useState([]);
   const [countriesData, setCountriesData] = useState([]);
   const [citiesData, setCitiesData] = useState({});
+  const [visaApplyFrom, setVisaApplyFrom] = useState([]);
+  const [departureCityTravel, setCityTravel] = useState([]);
+  const [dateError, setDateError] = useState("");
+  const [travelClass, setTravelClass] = useState([]);
+  const [dateErrorConference, setDateErrorConference] = useState("");
 
   const form = useRef();
   const {
@@ -75,10 +85,48 @@ const App = () => {
   } = useForm({
     defaultValues: {
       countries: [{ country: null, cities: [] }],
+      // Visa GIT Error Message
+      totalPaxVisaGroup: "",
+      rows: [
+        { visaApplyFrom: "", totlaPaxGit: "", gitVisaDays: "", Remarks: "" },
+      ],
+
+      TravelRow: [
+        {
+          departureCityTravel: null,
+          cityPaxTravel: null,
+          travelClass: null,
+          departureTimeTravel: null,
+        },
+      ],
+      // rows: [{ totlaPaxGit: "", Remarks: "" }],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  // conference Error date
+
+  const setUpDate = watch("setUpDate");
+  const conferenceStartDate = watch("conferenceStartDate");
+  const conferenceEndDate = watch("conferenceEndDate");
+  useEffect(() => {
+    if (setUpDate && conferenceStartDate && setUpDate >= conferenceStartDate) {
+      setDateErrorConference("Setup date must be before start date");
+    } else if (
+      conferenceStartDate &&
+      conferenceEndDate &&
+      conferenceStartDate >= conferenceEndDate
+    ) {
+      setDateErrorConference("Start date must be before end date");
+    } else {
+      setDateErrorConference("");
+    }
+  }, [setUpDate, conferenceStartDate, conferenceEndDate]);
+
+  const {
+    fields: fieldCounties,
+    append: appendCountries,
+    remove: removeCountries,
+  } = useFieldArray({
     control,
     name: "countries",
   });
@@ -87,24 +135,20 @@ const App = () => {
   // Watch countries array for changes
   const countries = watch("countries");
 
-  // const addDestination = (e) => {
-  //   if (e.target.id === "city") {
-  //     setCity(() => {
-  //       return [...city, 1];
-  //     });
-  //   }
-  //   e;
-  // };
+  const returnDateFlight = watch("returnDateFlight");
+  const departureDateFlight = watch("departureDateFlight");
 
-  //  For Country and city in select bos
-
-  const addDestination = () => {
-    setCountryList((prev) => [...prev, prev.length]);
-    setCountry;
-  };
-  const removeDestinationFunction = (index) => {
-    setCountryList((prev) => prev.filter((_, i) => i !== index));
-  };
+  useEffect(() => {
+    if (
+      returnDateFlight &&
+      departureDateFlight &&
+      departureDateFlight > returnDateFlight
+    ) {
+      setDateError("Departure cannot be greater than Return date");
+    } else {
+      setDateError("");
+    }
+  }, [returnDateFlight, departureDateFlight]);
 
   // const handleCountryChange = async (index, country) => {
   //   setCountryIdMap((prev) => ({ ...prev, [index]: country.id }));
@@ -129,9 +173,91 @@ const App = () => {
   // };
   // end for contry and State in select box
 
+  // useEffect(() => {
+  //   console.log("hello");
+  // }, [city, country]);
+
+  // Travel Row
+  const {
+    fields: fieldDepartureCity,
+    append: appendTravelRow,
+    remove: removeTravelRow,
+  } = useFieldArray({
+    control,
+    name: "TravelRow",
+  });
+
+  const totalPaxTravel = watch("totalPaxTravel");
+  const TravelRow = watch("TravelRow");
+
   useEffect(() => {
-    console.log("hello");
-  }, [city, country]);
+    const totalPax = parseInt(totalPaxTravel) || 0;
+    let sumPax = 0;
+
+    TravelRow.forEach((row, index) => {
+      const paxValue = parseInt(row.cityPaxTravel) || 0;
+      sumPax += paxValue;
+
+      if (paxValue > totalPax) {
+        setError(`TravelRow.${index}.cityPaxTravel`, {
+          type: "manual",
+          message: "Pax value exceeds total Pax",
+        });
+      } else {
+        clearErrors(`TravelRow.${index}.cityPaxTravel`);
+      }
+    });
+
+    if (sumPax > totalPax) {
+      setError("totalSumTravel", {
+        type: "manual",
+        message: "Total Pax sum exceeds total Pax",
+      });
+    } else {
+      clearErrors("totalSumTravel");
+    }
+  }, [totalPaxTravel, TravelRow, setError, clearErrors]);
+
+  // Visa GIT Total Pax Error message
+  const {
+    fields: rowFields,
+    append: appendRow,
+    remove: removeRow,
+  } = useFieldArray({
+    control,
+    name: "rows",
+  });
+  const totalPaxVisaGroup = watch("totalPaxVisaGroup");
+  const rows = watch("rows");
+
+  useEffect(() => {
+    const totalPax = parseInt(totalPaxVisaGroup) || 0;
+    let sumPax = 0;
+
+    rows.forEach((row, index) => {
+      const paxValue = parseInt(row.totlaPaxGit) || 0;
+      sumPax += paxValue;
+
+      if (paxValue > totalPax) {
+        setError(`rows.${index}.totlaPaxGit`, {
+          type: "manual",
+          message: "Pax value exceeds total Pax",
+        });
+      } else {
+        clearErrors(`rows.${index}.totlaPaxGit`);
+      }
+    });
+
+    if (sumPax > totalPax) {
+      setError("totalSum", {
+        type: "manual",
+        message: "Total Pax sum exceeds total Pax",
+      });
+    } else {
+      clearErrors("totalSum");
+    }
+  }, [totalPaxVisaGroup, rows, setError, clearErrors]);
+  // End of error message
 
   const cities = [
     "Mumbai",
@@ -244,7 +370,7 @@ const App = () => {
     "Rajahmundry",
     "Ballari",
     "Agartala",
-    ...Array.from(Array(1000), (_, index) => String(index + 1)),
+    // ...Array.from(Array(1000), (_, index) => String(index + 1)),
   ];
   const nationalCity = [
     "Mumbai",
@@ -363,6 +489,15 @@ const App = () => {
     { value: "Ushers", label: "Ushers" },
     { value: "Promoters", label: "Promoters" },
     { value: "Supervisor", label: "Supervisor" },
+  ];
+
+  const classTravel = [
+    { value: "Economy", label: "Economy" },
+    { value: "Economy-Premium", label: "Economy Premium" },
+    ,
+    { value: "Business", label: "Business" },
+
+    { value: "First Class", label: "First Class" },
   ];
 
   const option = nationalCity.map((city) => ({
@@ -606,25 +741,25 @@ const App = () => {
     label: city,
   }));
 
-  // Departure City //   <option value="">--Select--</option>
-  //   <option value="ClubRoom">Club Room </option>
-  //   <option value="JrSuite">Jr.Suite</option>
-  //   <option value="suite">Suite</option>
-  //   <option value="JrSuite">Dlx Suite</option>
-  //   <option value="PreSuite">Pres Suite</option>
-  //   <option value="Other">Other</option>
-
-  const upgradePaid = [
-    "Club Room",
-    "Jr. Suite",
-    "Suite",
-    "Dlx",
-    "Pres Suite",
-    "Other",
-    ...Array.from(Array(1000), (_, index) => String(index + 1)),
+  const mealPlan = [
+    { value: "CPAI", label: "CPAI" },
+    { value: "MAPAI", label: "MAPAI" },
+    { value: "PROMOTERS", label: "PROMOTERS" },
+    { value: "AP + SNACKS", label: "AP + SNACKS" },
+    { value: "OTHERS", label: "OTHERS" },
   ];
 
-  const upgradeComple = [
+  const mealRate = [
+    { value: "Breakfast", label: "Breakfast" },
+    { value: "Lunch", label: "Lunch" },
+    { value: "Dinner", label: "Dinner" },
+    { value: "Hi-Tea", label: "Hi-Tea" },
+    { value: "snacks", label: "Snacks" },
+    { value: "Gala Dinner", label: "Gala dinner" },
+    { value: "Others", label: "Others" },
+  ];
+
+  const upgradePaid = [
     "Club Room",
     "Jr. Suite",
     "Suite",
@@ -639,35 +774,18 @@ const App = () => {
     label: city,
   }));
 
-  const upgradePaidHotel = upgradePaid.map((city) => ({
-    value: city.toLowerCase().replace(/ /g, "-"),
-    label: city,
-  }));
-
-  const upgradeComplemHotel = upgradeComple.map((city) => ({
-    value: city.toLowerCase().replace(/ /g, "-"),
-    label: city,
-  }));
-
   // Add Git Apply From Section, total Pax and remark
-
-  const [rows, setRows] = useState([
-    { gitCity: [], totlaPaxGit: "", Remarks: "" },
-  ]);
 
   const optionGitVisaCity = nationalCity.map((city) => ({
     value: city.toLowerCase().replace(/ /g, "-"),
     label: city,
   }));
 
-  const addEntireRowFunction = () => {
-    setRows([...rows, { gitCity: [], totlaPaxGit: "", Remarks: "" }]);
-  };
+  const optionCityTravel = nationalCity.map((city) => ({
+    value: city.toLowerCase().replace(/ /g, "-"),
+    label: city,
+  }));
 
-  const removeRowFunction = (index) => {
-    const newRows = rows.filter((_, i) => i !== index);
-    setRows(newRows);
-  };
   // const createOptions = (multiplier) => {
   //   let options = [];
   //   for (let i = 0; i < multiplier; i++) {
@@ -748,12 +866,23 @@ const App = () => {
     SetSeating(true);
   };
 
-  const individual = ["Friend", "Staff", "Corporate Client Personal"];
+  // Individual, Walk-in, Friends & Family, , Corporate, staff, Others.
+
+  const individual = [
+    "Individual",
+    "Walk-in,",
+    "Friend & Family",
+    "Corporate Personal",
+    "Corporate",
+    "Staff",
+    "Others",
+  ];
   const group = [
     "Corporate Group",
     "Wedding",
     "Association",
     "Friends & Family",
+    "Others",
   ];
 
   let type = null;
@@ -780,6 +909,11 @@ const App = () => {
 
   const totalInsurancIssueGit = Array.from(
     { length: parseInt(watchAllFields.totalpaxInsurance) || 0 },
+    (_, i) => i
+  );
+
+  const totalHall = Array.from(
+    { length: parseInt(watchAllFields.noOfHalls) },
     (_, i) => i
   );
 
@@ -810,6 +944,18 @@ const App = () => {
       const updatedCities = [...cityValidVisaFit];
       updatedCities[index] = selected;
       setCityValidVisaFit(updatedCities);
+    } else if (type === "visaApplyFrom") {
+      const updatedCities = [...visaApplyFrom];
+      updatedCities[index] = selected;
+      setVisaApplyFrom(updatedCities);
+    } else if (type === "departureCityTravel") {
+      const updatedCities = [...departureCityTravel];
+      updatedCities[index] = selected;
+      setCityTravel(updatedCities);
+    } else if (type === "travelClass") {
+      const updatedCities = [...travelClass];
+      updatedCities[index] = selected;
+      setTravelClass(updatedCities);
     }
   };
 
@@ -821,7 +967,7 @@ const App = () => {
           "https://countriesnow.space/api/v0.1/countries/iso"
         );
         const countries = response.data.data.map((country) => ({
-          value: country.iso2,
+          value: country.name,
           label: country.name,
         }));
         setCountriesData(countries);
@@ -864,7 +1010,7 @@ const App = () => {
   };
 
   const onSubmit = (data) => {
-    // console.log("chutia");
+    console.log(data, "chutia");
     if (
       !watchAllFields.travelBooking &&
       !watchAllFields.hotelArrangements &&
@@ -877,18 +1023,55 @@ const App = () => {
       return;
     }
 
+    // sheetbd
+    // fetch("https://sheetdb.io/api/v1/3ngq0w1cm5feb", {
+    //   method: "POST",
+    //   headers: {
+    //     Accept: "application/json",
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({
+    //     data: [data],
+    //   }),
+    // })
+    //   .then((response) => response.json())
+    //   .then((data) => console.log(data));
+    // import.meta.env.VITE_BOOKING_REQUEST
+
+    // fetch(
+    //   "https://sheet.best/api/sheets/aff46630-36f2-4881-bbd5-9583700afac1",
+    //   {
+    //     method: "POST",
+    //     mode: "cors",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify(data),
+    //   }
+    // )
+    //   .then((r) => r.json())
+    //   .then((data) => {
+    //     // The response comes here
+    //     console.log(data, "hello sucessful");
+    //   })
+    //   .catch((error) => {
+    //     // Errors are reported there
+    //     console.log(error);
+    //   });
+    console.log(data, "hello data");
     let googleSheetData = {
       GroupType: data.groupType,
       BookingCategory: data.bookingCategory,
+      BookingCategoryOtherComments: data.Comments,
       CompanyName: data.company__name,
-      Name: data.name,
+      Name: data.contactPerson,
       Email: data.email,
       Phone: data.phone,
       Period: data.period,
       HotelDuration: data.hotelDuration,
       GroupSize: data.groupSize,
+      NoofPaxFit: data.noOfPaxFit,
       Place: data.destination,
-
       CheckBoxTravelBooking: data.travelBooking,
       checkBoxVisaRequirement: data.visaRequirement,
       checkBoxInsurance: data.insurance,
@@ -896,28 +1079,55 @@ const App = () => {
       CheckBoxEvent: data.event,
       CheckBoxLandArrangements: data.landArrangement,
 
-      TravelBookingType: data.travelBookingType,
-      TotaxPax: data.totalPax,
+      // Visa requirement fit
+      FitVisaPax: data.totalPaxVisa,
+      FitVisaDuration: data.visaPreferredDuration,
+      FitVisaType: data.visaTypeFit,
+      FitvisaTravelFrom: data.fitVisaTravelFrom,
+      FitvisaTravelTo: data.fitVisaTravelTo,
 
-      PreferedAirlines: data.preferedAirlines,
-      PreferredArrivalTime: data.preferedArrivalTime,
-      PreferredDepartureTime: data.preferedDepartureTime,
-      BussinessClassPax: data.anyBussinessClassPax,
+      // Visa requrement Git
+      GitVisaPax: data.totalPaxVisaGroup,
+      GitVisaDuration: data.visaPreferredDurationGroup,
+
+      // Travel Flights
+
+      TravelBookingType: data.travelBookingType,
+      TotaxPaxTravel: data.totalPaxTravel,
+      TravelDepartureDate: data.departureDateFlight,
+      TravelReturnDate: data.returnDateFlight,
+
+      //  Insurance Git
+      TotalPaxGitInsurance: data.totalpaxInsuranceGroup,
+      InsurancePlanGit: data.insurancePlanGroup,
+      InsuranceDuration: data.totalDaysInsuranceGroup,
+      // Insurance Fit
+      InsuranceFitTotalPax: data.totalpaxInsurance,
+      InsuranceFitPlan: data.insurancePlan,
+      InsuranceAmount: data.insuranceAmount,
+      InsuranceDurationFit: data.totalDaysInsurance,
+
+      // Hotel
       PurposeOfTravle: data.purposeOfTravel,
+      TravelReasons: data?.travelReasons,
 
       ApproxDBL: data.approxDBL,
       ApproxSGL: data.approxSGL,
       HotelCategory: data.hotelCategory,
       HotelRoomType: data.roomType,
-      UpgradeComp: data.upgrade__comp,
-      UpgradePaid: data.upgrade__Paid,
+
+      liqure: data.liquor,
+      liquePackage: data?.liquePackage,
+
       ConferenceHall: data.conferenceHall,
       HallInSqFt: data.squareFeet,
       HallInSqMtr: data.squareMeters,
+      TotalHall: data.noOfHalls,
       ConferenceDuration: data.duration,
       SetUpDate: data.setUpDate,
       conferenceStartDate: data.conferenceStartDate,
       conferenceEndDate: data.conferenceEndDate,
+
       SeatingRound: data.RoundTable,
       SeatingHalfMoon: data.HalfMoon,
       SeatingClassroom: data.ClassRoom,
@@ -925,93 +1135,68 @@ const App = () => {
       SeatingUshape: data.UShape,
       SeatingCockTail: data.Cocktail,
       SeatingOther: data.Others,
+      floorPlanLink: data?.floorPlanLink,
+
+      // Land Arrangement
 
       AirportArrivalTransfers: data.airportArrivalTransfers,
-      AirportArrivalDate: data.arrvilaDate,
-      AirportTime: data.departureTime,
+      AirportArrivalDate: data?.arrvilaDate,
+      AirportTime: data?.departureTime,
 
       AirportDepartureTransfers: data.airportDepartureTrans,
-      AirportDepartureDate: data.departureDate,
-      AirportDepartureTime: data.arrvilTime,
+      AirportDepartureDate: data?.departureDate,
+      AirportDepartureTime: data?.arrvilTime,
 
       SightSeeingFullDay: data.FullDay,
-      SightSeeingTotDaysFull: data.totalFullDaysSightSeeing,
+      SightSeeingTotDaysFull: data?.totalFullDaysSightSeeing,
 
       SightSeeingHalfDay: data.halfDay,
-      SightSeeingTotDaysHalf: data.totalHalfDaysSightSeeing,
+      SightSeeingTotDaysHalf: data?.totalHalfDaysSightSeeing,
 
       SightSeeingAllPopularSite: data.AllPopularSites,
       SightSeeingSpecify: data.Specify,
-      SightSeeingSpeciytDetails: data.sightSeeingSpecify,
-      // Visa requirement fit
-      FitVisaPax: data.totalPaxVisa,
-      FitVisaDuration: data.visaPreferredDuration,
-      FitVisaType: data.visaTypeFit,
-      FitvisaTravelFrom: data.fitVisaTravelFrom,
-      FitvisaTravelTo: data.FitvisaTravelTo,
-      // Visa requrement Git
-      GitVisaPax: data.totalPaxVisaGroup,
-      GitVisaDuration: data.visaPreferredDurationGroup,
+      SightSeeingSpeciytDetails: data?.sightSeeingSpecify,
+
+      //  Event Arragement
+      Stage: data.stage,
+      stageSidePanel: data.stageSidePanel,
+      podiumsWithBranding: data.podiumsWithBranding,
+      Steps: data.Steps,
+      EntryGateArch: data.EntryGateArch,
+      paSystem: data.paSystem,
+      BaseStageMonitor: data.BaseStageMonitor,
+      ChannelMixer: data.ChannelMixer,
+      Mic: data.Mic,
+      PioneerDJMixing: data.PioneerDJMixing,
+      upsGreenGensets: data.upsGreenGensets,
+      lights: data.lights,
+      HazeMachine: data.HazeMachine,
+      SeamlessSwitcher: data.SeamlessSwitcher,
+      WatchoutServer: data.WatchoutServer,
+      PreviewMonitor: data.PreviewMonitor,
+      HdSdiSplitter: data.HdSdiSplitter,
+      AvoliteBoard: data.AvoliteBoard,
+      LEDWalls: data.LEDWalls,
+      Photographer: data.Photographer,
+      photTotalDays: data?.photTotalDays,
+      Videographer: data.Videographer,
+      videoTotDays: data?.videoTotDays,
+      Trusses: data.Trusses,
     };
 
     // for adding Country and city list
     if (data.destination == "international") {
-      for (let i = 0; i < countryList.length; i++) {
+      for (let i = 0; i < fieldCounties.length; i++) {
         let index = i.toString();
         let cityValue = "cityValue" + index;
         let countryValue = "countryValue" + index;
-        let cityName = data[`state-${i}`].map((item) => item.value).join(", ");
-
-        googleSheetData[countryValue] = data[`country-${i}`].name;
+        // console.log(data.countries[i].country.label, "My ccoon");
+        let cityName = data.countries[i].cities
+          ?.map((item) => item.value)
+          .join(", ");
+        googleSheetData[countryValue] = data.countries[i].country.label;
         googleSheetData[cityValue] = cityName;
       }
-    }
-    if (
-      data.groupType == "Individual" &&
-      data.visaRequirement &&
-      totalCountryVisad
-    ) {
-      for (let i = 0; i < countryList.length; i++) {
-        let index = i.toString();
-        let passportNoFit = "passprtNoFit" + index;
-        let poiFit = "poiFit" + index;
-        let doiFit = "doiFit" + index;
-        let doeFit = "doeFit" + index;
-        let travelBefore = "travelBefore" + index;
-        let holdingValid = "holdingValid" + index;
-        let visaValidCou = "visaValidCou" + index;
-        let travelBeforeFit = data[`TravelledBefore${i}`]
-          .map((item) => item.value)
-          .join(", ");
-        let HoldingValidVisaFit = data[`HoldingValidVisa${i}`]
-          .map((item) => item.value)
-          .join(", ");
-
-        let cityValidVisaFit = data[`cityValidVisa${i}`]
-          .map((item) => item.value)
-          .join(", ");
-        googleSheetData[passportNoFit] = data[`passportNo${i}`].name;
-        googleSheetData[poiFit] = data[`poi${i}`].name;
-        googleSheetData[doiFit] = data[`doi${i}`].name;
-        googleSheetData[doeFit] = data[`doe${i}`].name;
-        googleSheetData[travelBefore] = travelBeforeFit;
-        googleSheetData[holdingValid] = HoldingValidVisaFit;
-        googleSheetData[visaValidCou] = cityValidVisaFit;
-      }
-    }
-
-    if (data.travelBooking && data.travelBookingType == "Flight") {
-      const departureCityTotPax = data.departureCityTotPax
-        .map((item) => item.value)
-        .join(", ");
-      googleSheetData.departureCityTotalPax = departureCityTotPax;
-    }
-
-    if (data.groupType == "group" && data.visaRequirement) {
-      const visaCountryGroup = data.visaCountryGroup
-        .map((item) => item.value)
-        .join(", ");
-      googleSheetData.VisaCountryGroup = visaCountryGroup;
     }
 
     if (data.destination == "national") {
@@ -1020,42 +1205,171 @@ const App = () => {
         .join(", ");
       googleSheetData.nationals = national__city;
     }
+    const CountryVisaFit =
+      data?.countryVisaFit?.map((item) => item.value).join(", ") || "";
+    googleSheetData.countryVisaFit = CountryVisaFit;
 
-    if (data.groupType == "Individual" && data.visaRequirement) {
-      const countryFit = data.groupsFit.map((item) => item.value).join(", ");
-      googleSheetData.countryFit = countryFit;
-    }
+    const CountryVisaGit =
+      data?.visaCountryGroup?.map((item) => item.value).join(", ") || "";
+    googleSheetData.countryVisaGit = CountryVisaGit;
 
-    if (data.groupType == "group" && data.visaRequirement) {
-      rows.map((item, index) => {
-        let number = index.toString();
-        let totalPax = "totalPaxGit" + number;
-        let totalday = "totalDayGit" + number;
-        let remarks = "GitRemarks" + number;
-        let cityGitVisa = "cityGitVisa" + number;
-        let visaCountry = data[`visaApplyFrom${index}`]
-          .map((item) => item.value)
-          .join(", ");
+    totalCountryVisad?.map((item, i) => {
+      let index = i.toString();
+      let passportNoFit = "passprtNoFit" + index;
+      let poiFit = "poiFit" + index;
+      let doiFit = "doiFit" + index;
+      let doeFit = "doeFit" + index;
+      let travelBefore = "travelBefore" + index;
+      let holdingValid = "holdingValid" + index;
+      let visaValidCou = "visaValidCou" + index;
+      let travelBeforeFit = data[`TravelledBefore${i}`]
+        .map((item) => item.value)
+        .join(", ");
+      let HoldingValidVisaFit = data[`HoldingValidVisa${i}`]
+        .map((item) => item.value)
+        .join(", ");
 
-        googleSheetData[totalPax] = data[`totlaPaxGit${index}`].name;
-        googleSheetData[totalday] = data[`gitVisaDays${index}`].name;
-        googleSheetData[remarks] = data[`Remarks${index}`].name;
-        googleSheetData[cityGitVisa] = visaCountry;
-      });
-    }
+      let cityValidVisaFit = data[`cityValidVisa${i}`]
+        .map((item) => item.value)
+        .join(", ");
+      googleSheetData[passportNoFit] = data[`passportNoFit${i}`];
+      googleSheetData[poiFit] = data[`poi${i}`];
+      googleSheetData[doiFit] = data[`doi${i}`];
+      googleSheetData[doeFit] = data[`doe${i}`];
+      googleSheetData[travelBefore] = travelBeforeFit;
+      googleSheetData[holdingValid] = HoldingValidVisaFit;
+      googleSheetData[visaValidCou] = cityValidVisaFit;
+    });
 
-    if (data.conferenceHall == "Yes") {
-      for (let i = 0; i < data.duration; i++) {
-        let index = i.toString();
-        let conferenceTime = "conferenceTime" + index;
-        let conferenceActivity = "conferenceActivity" + index;
-        googleSheetData[conferenceTime] = data[`ConferenceAgendaTime-${i}`];
+    const mealPlan =
+      data?.mealPlan?.map((item, index) => item.value).join(", ") || "";
+    googleSheetData.mealPlan = mealPlan;
+    const mealRate =
+      data?.mealRate?.map((item, index) => item.value).join(", ") || "";
+    googleSheetData.mealRate = mealRate;
+
+    const manPower =
+      data?.manpowerStaffing?.map((item, index) => item.value).join(", ") || "";
+
+    googleSheetData.manpowerStaffing = manPower;
+
+    rowFields?.map((item, i) => {
+      let index = i.toString();
+      let city = "cityVisaApplyFrom" + index;
+      let pax = "GitNoOFPaxVisa" + index;
+      let days = "GitVisaDays" + index;
+      let Remarks = "GitVisaRemarks" + index;
+
+      let visaApplyFromGit = data[`visaApplyFrom${i}`]
+        ?.map((item) => item.value)
+        .join(", ");
+      // console.log(visaApplyFromGit, "city...");
+      googleSheetData[city] = visaApplyFromGit;
+      googleSheetData[pax] = data[`rows.${index}.totlaPaxGit`];
+      googleSheetData[days] = data[`gitVisaDays${i}`];
+      googleSheetData[Remarks] = data[`Remarks${i}`];
+    });
+
+    fieldDepartureCity?.map((item, i) => {
+      let index = i.toString();
+      let city = "travelFlightCity" + index;
+      let pax = "travelFlightPax" + index;
+      let travelClass = "travelFlightClass" + index;
+      let flightTime = "travelFlightTime" + index;
+
+      let departureCityTravel = data[`departureCityTravel${i}`]
+        ?.map((item) => item.value)
+        .join(", ");
+      // console.log(departureCityTravel, "Teki");
+      googleSheetData[city] = departureCityTravel;
+      googleSheetData[pax] = data[`TravelRow.${i}.cityPaxTravel`];
+      googleSheetData[travelClass] = data[`travelClass${i}`]?.value;
+      googleSheetData[flightTime] = data[`departureTimeTravel${i}`];
+    });
+
+    totalInsurancIssueGit.map((item, i) => {
+      let index = i.toString();
+      let family = "familyName" + index;
+      let firstName = "firstName" + index;
+      let middleName = "middleName" + index;
+      let pass = "passportNumberIn" + index;
+      let passExpiry = "passportExpiry" + index;
+      let Dob = "dateOfBirth" + index;
+      let addre = "address" + index;
+      let nomin = "nominee" + index;
+      let MedHis = "medicalHistory" + index;
+      googleSheetData[family] = data[`familyName${i}`];
+      googleSheetData[firstName] = data[`firstName${i}`];
+      googleSheetData[middleName] = data[`middleName${i}`];
+      googleSheetData[pass] = data[`passportNumber${i}`];
+      googleSheetData[passExpiry] = data[`passportExpiry${i}`];
+
+      googleSheetData[Dob] = data[`dobInsu${i}`];
+      googleSheetData[addre] = data[`address${i}`];
+
+      googleSheetData[nomin] = data[`Nominee${i}`];
+      googleSheetData[MedHis] = data[`medicalHistory${i}`];
+    });
+
+    totalHall?.map((item, i) => {
+      let index = i.toString();
+      let venueName = "VenueName" + index;
+      googleSheetData[venueName] = data[`VenueName${index}`];
+    });
+
+    agenda__number?.map((item, i) => {
+      let index = i.toString();
+      let conferAgendaTime = "ConferenceAgendaTime" + index;
+      googleSheetData[conferAgendaTime] = data[`ConferenceAgendaTime-${i}`];
+
+      totalHall?.map((it, idx) => {
+        let inde = idx.toString();
+        let conferenceActivity = "conferenceActivity" + index + inde;
         googleSheetData[conferenceActivity] =
-          data[`ConferenceAgendaActivity-${i}`];
-      }
-    }
+          data[`ConferenceAgendaActivityHall${i}-${idx}`];
+      });
+    });
 
-    console.log(googleSheetData, "hello here is my data");
+    // console.log(googleSheetData, "G-data");
+    // setLoading(true);
+    // fetch(import.meta.env.VITE_BOOKING_REQUEST, {
+    //   method: "POST",
+    //   mode: "cors",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify(data),
+    // })
+    //   .then((r) => r.json())
+    //   .then((data) => {
+    //     // The response comes here
+    //     console.log(data, "hello sucessful");
+
+    //     MySwal.fire({
+    //       icon: "success",
+    //       title:
+    //         "Thank you for submitting your information. We will connect you soon",
+    //     });
+    //     setTimeout(() => {
+    //       setLoading(false);
+    //       // reset();
+    //     }, 1000);
+    //   })
+    //   .catch((error) => {
+    //     // Errors are reported there
+    //     console.log(error);
+    //     MySwal.fire({
+    //       icon: "error",
+    //       title: "Oops...",
+    //       text: "Try after some time",
+    //     });
+    //     console.error("Error fetching data:", error);
+    //     setTimeout(() => {
+    //       setLoading(false);
+    //       // reset();
+    //     }, 1000 * 2);
+    //   });
+
     setLoading(true);
     axios
       .post(import.meta.env.VITE_BOOKING_REQUEST, googleSheetData)
@@ -1083,6 +1397,93 @@ const App = () => {
           reset();
         }, 1000 * 2);
       });
+
+    // sheetbd;
+    // fetch("https://sheetdb.io/api/v1/3ngq0w1cm5feb", {
+    //   method: "POST",
+    //   headers: {
+    //     Accept: "application/json",
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({
+    //     data: [googleSheetData],
+    //   }),
+    // })
+    //   .then((response) => response.json())
+    //   .then((data) => console.log(data));
+
+    // fetch(import.meta.env.VITE_BOOKING_REQUEST, {
+    //   method: "POST",
+    //   mode: "cors",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify(googleSheetData),
+    // })
+    //   .then((r) => r.json())
+    //   .then((googleSheetData) => {
+    //     // The response comes here
+    //     console.log(googleSheetData);
+    //     MySwal.fire({
+    //       icon: "success",
+    //       title:
+    //         "Thank you for submitting your information. We will connect you soon",
+    //     });
+    //     setTimeout(() => {
+    //       setLoading(false);
+    //       // reset();
+    //     }, 1000);
+    //   })
+    //   .catch((error) => {
+    //     MySwal.fire({
+    //       icon: "error",
+    //       title: "Oops...",
+    //       text: "Try after some time",
+    //     });
+    //     console.error("Error fetching data:", error);
+    //     setTimeout(() => {
+    //       setLoading(false);
+    //       // reset();
+    //     }, 1000 * 2);
+    //     // Errors are reported there
+    //     console.log(error);
+    //   });
+
+    // if (data.groupType == "Individual" && data.visaRequirement) {
+    //   const countryFit = data.groupsFit.map((item) => item.value).join(", ");
+    //   googleSheetData.countryFit = countryFit;
+    // }
+
+    // if (data.groupType == "group" && data.visaRequirement) {
+    //   rows.map((item, index) => {
+    //     let number = index.toString();
+    //     let totalPax = "totalPaxGit" + number;
+    //     let totalday = "totalDayGit" + number;
+    //     let remarks = "GitRemarks" + number;
+    //     let cityGitVisa = "cityGitVisa" + number;
+    //     let visaCountry = data[`visaApplyFrom${index}`]
+    //       .map((item) => item.value)
+    //       .join(", ");
+
+    //     googleSheetData[totalPax] = data[`totlaPaxGit${index}`].name;
+    //     googleSheetData[totalday] = data[`gitVisaDays${index}`].name;
+    //     googleSheetData[remarks] = data[`Remarks${index}`].name;
+    //     googleSheetData[cityGitVisa] = visaCountry;
+    //   });
+    // }
+
+    // if (data.conferenceHall == "Yes") {
+    //   for (let i = 0; i < data.duration; i++) {
+    //     let index = i.toString();
+    //     let conferenceTime = "conferenceTime" + index;
+    //     let conferenceActivity = "conferenceActivity" + index;
+    //     googleSheetData[conferenceTime] = data[`ConferenceAgendaTime-${i}`];
+    //     googleSheetData[conferenceActivity] =
+    //       data[`ConferenceAgendaActivity-${i}`];
+    //   }
+    // }
+
+    // console.log(googleSheetData, "hello here is my data");
   };
 
   return (
@@ -1091,7 +1492,7 @@ const App = () => {
         <img src={headerImg} width={160}></img>
       </header>
       <main>
-        <Container className="d-flex justify-content-center">
+        <Container>
           <form
             name="FlightHotelForms"
             className="form__main"
@@ -1099,10 +1500,10 @@ const App = () => {
             ref={form}
             onSubmit={handleSubmit(onSubmit)}>
             <h2 className="room_reservation_text" id="bookingText">
-              Query Form
+              Query software
             </h2>
             <Row className="row__container">
-              <Col md={4}>
+              <Col md={watchAllFields.bookingCategory === "Others" ? 3 : 4}>
                 <div className="input__container">
                   <label htmlFor="title">
                     Booking Type <span className="required_field">*</span>
@@ -1123,7 +1524,7 @@ const App = () => {
                   )}
                 </div>
               </Col>
-              <Col md={4}>
+              <Col md={watchAllFields.bookingCategory === "Others" ? 3 : 4}>
                 <div className="input__container">
                   <label htmlFor="destination">
                     Destination <span className="required_field">*</span>
@@ -1146,7 +1547,7 @@ const App = () => {
                   )}
                 </div>
               </Col>
-              <Col md={4}>
+              <Col md={watchAllFields.bookingCategory === "Others" ? 3 : 4}>
                 <div className="input__container">
                   <label htmlFor="subcategory">
                     Booking Category <span className="required_field">*</span>{" "}
@@ -1176,6 +1577,30 @@ const App = () => {
                   )}
                 </div>
               </Col>
+              {watchAllFields.bookingCategory == "Others" && (
+                <Col md={watchAllFields.bookingCategory === "Others" ? 3 : 4}>
+                  <div className="input__container">
+                    <label htmlFor="Comments">
+                      Comments <span className="required_field">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="Comments"
+                      placeholder="Comment"
+                      className="input-element"
+                      name="Comments"
+                      {...register("Comments", {
+                        required: "Comments is required",
+                      })}
+                    />
+                    {errors.Comments && (
+                      <span className="errorMsg">
+                        {errors.Comments.message}
+                      </span>
+                    )}
+                  </div>
+                </Col>
+              )}
             </Row>
             <Row className="row__container">
               <Col md={3}>
@@ -1453,7 +1878,7 @@ const App = () => {
 
             {watchAllFields.destination === "international" && (
               <>
-                {fields.map((item, index) => (
+                {fieldCounties.map((item, index) => (
                   <Row className="row__container" key={item.id}>
                     <Col md={5}>
                       <div className="input__container">
@@ -1515,7 +1940,7 @@ const App = () => {
                         type="button"
                         className="btn btn-danger"
                         size="sm"
-                        onClick={() => remove(index)}>
+                        onClick={() => removeCountries(index)}>
                         Remove
                       </Button>
                     </Col>
@@ -1526,7 +1951,9 @@ const App = () => {
                     <Button
                       type="button"
                       size="sm"
-                      onClick={() => append({ country: null, cities: [] })}>
+                      onClick={() =>
+                        appendCountries({ country: null, cities: [] })
+                      }>
                       Add Country
                     </Button>
                   </Col>
@@ -1541,7 +1968,7 @@ const App = () => {
                 <span className="required_field">*</span>
               </label>
               <br />
-              <Col md={4}>
+              <Col md={watchAllFields.destination === "international" ? 4 : 3}>
                 <div style={{ marginTop: "10px", padding: "5px" }}>
                   <Controller
                     name="travelBooking"
@@ -1567,7 +1994,8 @@ const App = () => {
               </Col>
               {watchAllFields.destination == "international" && (
                 <>
-                  <Col md={4}>
+                  <Col
+                    md={watchAllFields.destination === "international" ? 4 : 3}>
                     <div style={{ marginTop: "10px", padding: "5px" }}>
                       <Controller
                         name="visaRequirement"
@@ -1592,7 +2020,8 @@ const App = () => {
                     </div>
                   </Col>
 
-                  <Col md={4}>
+                  <Col
+                    md={watchAllFields.destination === "international" ? 4 : 3}>
                     <div style={{ marginTop: "10px", padding: "5px" }}>
                       <Controller
                         name="insurance"
@@ -1619,7 +2048,7 @@ const App = () => {
                 </>
               )}
 
-              <Col md={4}>
+              <Col md={watchAllFields.destination === "international" ? 4 : 3}>
                 <div style={{ marginTop: "10px", padding: "5px" }}>
                   <Controller
                     name="hotelArrangements"
@@ -1644,7 +2073,7 @@ const App = () => {
                 </div>
               </Col>
 
-              <Col md={4}>
+              <Col md={watchAllFields.destination === "international" ? 4 : 3}>
                 <div style={{ marginTop: "10px", padding: "5px" }}>
                   <Controller
                     name="event"
@@ -1665,7 +2094,7 @@ const App = () => {
                 </div>
               </Col>
 
-              <Col md={4}>
+              <Col md={watchAllFields.destination === "international" ? 4 : 3}>
                 <div style={{ marginTop: "10px", padding: "5px" }}>
                   <Controller
                     name="landArrangement"
@@ -1690,48 +2119,6 @@ const App = () => {
                 </div>
               </Col>
 
-              {/* <Col md={4}>
-                <div style={{ marginTop: "10px", padding: "5px" }}>
-                  <Controller
-                    name="conferences"
-                    {...register("conferences")}
-                    control={control}
-                    render={({ field }) => (
-                      <input
-                        type="checkbox"
-                        {...field}
-                        checked={field.value || false}
-                        style={{ marginRight: "5px" }}
-                      />
-                    )}
-                  />
-                  <label style={{ marginLeft: "5px", color: "black" }}>
-                    Conference Requirements
-                  </label>
-                </div>
-              </Col> */}
-
-              {/* <Col md={4}>
-                <div style={{ marginTop: "10px", padding: "5px" }}>
-                  <Controller
-                    name="conferences"
-                    {...register("conferences")}
-                    control={control}
-                    render={({ field }) => (
-                      <input
-                        type="checkbox"
-                        {...field}
-                        checked={field.value || false}
-                        style={{ marginRight: "5px" }}
-                      />
-                    )}
-                  />
-                  <label style={{ marginLeft: "5px", color: "black" }}>
-                    Conference Requirements
-                  </label>
-                </div>
-              </Col> */}
-
               {isSubmitClicked &&
               !watchAllFields.travelBooking &&
               !watchAllFields.hotelArrangements &&
@@ -1748,332 +2135,211 @@ const App = () => {
               ) : null}
             </Row>
 
-            {/* {watchAllFields.visaRequirement} */}
-
-            {/* Country/s for which Visa required
-Group or Individual
-Business or Tourist */}
-
-            {watchAllFields.visaRequirement && watchAllFields.groupType && (
-              <>
-                {watchAllFields.groupType == "Individual" && (
-                  <>
-                    <Row className="row__container ">
-                      <div>
-                        <p className="services">Visa Requirement</p>
-                        <Row>
-                          <Col md={6}>
-                            <div className="input__container">
-                              <label htmlFor="totalPaxVisa">
-                                No of Pax
-                                <span className="required_field">*</span>
-                              </label>
-                              <input
-                                type="text"
-                                id="totalPaxVisa"
-                                className="input-element"
-                                placeholder="Number of Pax"
-                                name="totalPaxVisa"
-                                {...register("totalPaxVisa", {
-                                  required: "Total No of Pax",
-                                  pattern: {
-                                    value: /^[0-9]+$/,
-                                    message: "Enter Valid no",
-                                  },
-                                })}
-                              />
-                              {errors.totalPaxVisa && (
-                                <span className="errorMsg">
-                                  {errors.totalPaxVisa.message}
-                                </span>
-                              )}
-                            </div>
-                          </Col>
-                          <Col md={6}>
-                            <div className="input__container">
-                              <label htmlFor="visaPreferredDuration">
-                                Preferred duration{" "}
-                                <span className="required_field">*</span>
-                              </label>
-
-                              <select
-                                id="Place"
-                                name="visaPreferredDuration"
-                                className="input-element"
-                                {...register("visaPreferredDuration", {
-                                  required: "Select from list",
-                                })}>
-                                <option value="">--Select--</option>
-                                <option value="6Months"> 6 months</option>
-                                <option value="2Yrs">2 Yrs.</option>
-                                <option value="5Yrs"> 5 Yrs.</option>
-                                <option value="10Yrs">10 Yrs</option>
-                                <option value="Multiple">Multiple</option>
-                                <option value="Groups">Groups</option>
-                                <option value="TransitVisa">
-                                  Transit Visa
-                                </option>
-                                <option value="Other">Other</option>
-                              </select>
-                              {errors.visaPreferredDuration && (
-                                <span className="errorMsg">
-                                  {errors.visaPreferredDuration.message}
-                                </span>
-                              )}
-                            </div>
-                          </Col>
-                        </Row>
-                        <Row className="row__container">
-                          <Col md={3}>
-                            <div className="input__container">
-                              <label htmlFor="groupsFit">
-                                Country's / VISA Required
-                                <span className="required_field">*</span>
-                              </label>
-                              <Controller
-                                name="groupsFit"
-                                control={control}
-                                rules={{ required: "Select from list" }}
-                                render={({ field }) => (
-                                  <Select
-                                    {...field}
-                                    options={countryVisaTo}
-                                    isMulti
-                                    onChange={(selected) => {
-                                      field.onChange(selected);
-                                      setCountryVisaGit(selected);
-                                      if (selected) {
-                                        clearErrors("groupsFit");
-                                      }
-                                    }}
-                                    value={countryVisaGit}
-                                  />
-                                )}
-                              />
-
-                              {errors.groupsFit && (
-                                <span className="errorMsg">
-                                  {errors.groupsFit.message}
-                                </span>
-                              )}
-                            </div>
-                          </Col>
-
-                          <Col md={3}>
-                            <div className="input__container">
-                              <label htmlFor="visaTypeFit">
-                                Visa Type{" "}
-                                <span className="required_field">*</span>
-                              </label>
-                              <select
-                                id="Place"
-                                name="visaTypeFit"
-                                className="input-element"
-                                {...register("visaTypeFit", {
-                                  required: "Select from list",
-                                })}>
-                                <option value="">--Select--</option>
-                                <option value="Business">Business</option>
-                                <option value="Tourist">Tourist</option>
-                              </select>
-                              {errors.visaTypeFitd && (
-                                <span className="errorMsg">
-                                  {errors.visaTypeFit.message}
-                                </span>
-                              )}
-                            </div>
-                          </Col>
-                          <Col md={3}>
-                            <div className="input__container">
-                              <label htmlFor="fitVisaTravelFrom">
-                                Travel Date From
-                                <span className="required_field">*</span>
-                              </label>
-                              <input
-                                id="fitVisaTravelFrom"
-                                name="fitVisaTravelFrom"
-                                type="date"
-                                className="input-element"
-                                {...register("fitVisaTravelFrom", {
-                                  required: "Select Date",
-                                })}
-                              />
-
-                              {errors.fitVisaTravelFrom && (
-                                <span className="errorMsg">
-                                  {errors.fitVisaTravelFrom.message}
-                                </span>
-                              )}
-                            </div>
-                          </Col>
-
-                          <Col md={3}>
-                            <div className="input__container">
-                              <label htmlFor="FitVisaTravelTo">
-                                Travel Date To
-                                <span className="required_field">*</span>
-                              </label>
-                              <input
-                                id="FitVisaTravelTo"
-                                name="FitVisaTravelTo"
-                                type="date"
-                                className="input-element"
-                                {...register("FitVisaTravelTo", {
-                                  required: "Select Date",
-                                })}
-                              />
-
-                              {errors.FitVisaTravelTo && (
-                                <span className="errorMsg">
-                                  {errors.FitVisaTravelTo.message}
-                                </span>
-                              )}
-                            </div>
-                          </Col>
-                        </Row>
-                      </div>
-                    </Row>
-                    {totalCountryVisad.map((item, index) => {
-                      return (
-                        <Row className="row__container" key={index}>
-                          <p className="services">Traveller {index + 1}</p>
+            {watchAllFields.visaRequirement &&
+              watchAllFields.groupType &&
+              watchAllFields.destination === "international" && (
+                <>
+                  {watchAllFields.groupType == "Individual" && (
+                    <>
+                      <Row className="row__container ">
+                        <div>
+                          <p className="services">Visa Requirement</p>
                           <Row>
-                            <Col md={3}>
+                            <Col md={6}>
                               <div className="input__container">
-                                <label htmlFor={`passportNo${index}`}>
-                                  Passport No
+                                <label htmlFor="totalPaxVisa">
+                                  No of Pax
                                   <span className="required_field">*</span>
                                 </label>
                                 <input
                                   type="text"
-                                  id="passportNo"
+                                  id="totalPaxVisa"
                                   className="input-element"
-                                  placeholder="Passport No"
-                                  name={`passportNo${index}`}
-                                  {...register(`passportNo${index}`, {
-                                    required: "Please enter Passport No",
+                                  placeholder="Number of Pax"
+                                  name="totalPaxVisa"
+                                  {...register("totalPaxVisa", {
+                                    required: "Total No of Pax",
+                                    pattern: {
+                                      value: /^[0-9]+$/,
+                                      message: "Enter Valid no",
+                                    },
                                   })}
                                 />
-                                {errors[`passportNo${index}`] && (
+                                {errors.totalPaxVisa && (
                                   <span className="errorMsg">
-                                    {errors[`passportNo${index}`].message}
+                                    {errors.totalPaxVisa.message}
                                   </span>
                                 )}
                               </div>
                             </Col>
-
-                            <Col md={3}>
+                            <Col md={6}>
                               <div className="input__container">
-                                <label htmlFor={`poi${index}`}>
-                                  POI
+                                <label htmlFor="visaPreferredDuration">
+                                  Preferred duration{" "}
                                   <span className="required_field">*</span>
                                 </label>
-                                <input
-                                  id="poi"
-                                  name={`poi${index}`}
-                                  type="text"
-                                  placeholder="Place of issue"
+
+                                <select
+                                  id="Place"
+                                  name="visaPreferredDuration"
                                   className="input-element"
-                                  {...register(`poi${index}`, {
-                                    required: "Select Date",
-                                  })}
-                                />
-
-                                {errors[`poi${index}`] && (
+                                  {...register("visaPreferredDuration", {
+                                    required: "Select from list",
+                                  })}>
+                                  <option value="">--Select--</option>
+                                  <option value="6Months"> 6 months</option>
+                                  <option value="2Yrs">2 Yrs.</option>
+                                  <option value="5Yrs"> 5 Yrs.</option>
+                                  <option value="10Yrs">10 Yrs</option>
+                                  <option value="Multiple">Multiple</option>
+                                  <option value="Groups">Groups</option>
+                                  <option value="TransitVisa">
+                                    Transit Visa
+                                  </option>
+                                  <option value="Other">Other</option>
+                                </select>
+                                {errors.visaPreferredDuration && (
                                   <span className="errorMsg">
-                                    {errors[`poi${index}`].message}
-                                  </span>
-                                )}
-                              </div>
-                            </Col>
-
-                            <Col md={3}>
-                              <div className="input__container">
-                                <label htmlFor={`doi${index}`}>
-                                  DOI
-                                  <span className="required_field">*</span>
-                                </label>
-                                <input
-                                  id="doi"
-                                  name={`doi${index}`}
-                                  type="date"
-                                  className="input-element"
-                                  {...register(`doi${index}`, {
-                                    required: "Select Date",
-                                  })}
-                                />
-
-                                {errors[`doi${index}`] && (
-                                  <span className="errorMsg">
-                                    {errors[`doi${index}`].message}
-                                  </span>
-                                )}
-                              </div>
-                            </Col>
-                            <Col md={3}>
-                              <div className="input__container">
-                                <label htmlFor={`doe${index}`}>
-                                  DOE
-                                  <span className="required_field">*</span>
-                                </label>
-                                <input
-                                  id="doe"
-                                  name={`doe${index}`}
-                                  type="date"
-                                  className="input-element"
-                                  {...register(`doe${index}`, {
-                                    required: "Select Date",
-                                  })}
-                                />
-
-                                {errors[`doe${index}`] && (
-                                  <span className="errorMsg">
-                                    {errors[`doe${index}`].message}
+                                    {errors.visaPreferredDuration.message}
                                   </span>
                                 )}
                               </div>
                             </Col>
                           </Row>
                           <Row className="row__container">
-                            <Row className="row__container">
+                            <Col md={3}>
+                              <div className="input__container">
+                                <label htmlFor="countryVisaFit">
+                                  Country's / VISA Required
+                                  <span className="required_field">*</span>
+                                </label>
+                                <Controller
+                                  name="countryVisaFit"
+                                  control={control}
+                                  rules={{ required: "Select from list" }}
+                                  render={({ field }) => (
+                                    <Select
+                                      {...field}
+                                      options={countryVisaTo}
+                                      isMulti
+                                      onChange={(selected) => {
+                                        field.onChange(selected);
+                                        setCountryVisaGit(selected);
+                                        if (selected) {
+                                          clearErrors("countryVisaFit");
+                                        }
+                                      }}
+                                      value={countryVisaGit}
+                                    />
+                                  )}
+                                />
+
+                                {errors.countryVisaFit && (
+                                  <span className="errorMsg">
+                                    {errors.countryVisaFit.message}
+                                  </span>
+                                )}
+                              </div>
+                            </Col>
+
+                            <Col md={3}>
+                              <div className="input__container">
+                                <label htmlFor="visaTypeFit">
+                                  Visa Type{" "}
+                                  <span className="required_field">*</span>
+                                </label>
+                                <select
+                                  id="Place"
+                                  name="visaTypeFit"
+                                  className="input-element"
+                                  {...register("visaTypeFit", {
+                                    required: "Select from list",
+                                  })}>
+                                  <option value="">--Select--</option>
+                                  <option value="Business">Business</option>
+                                  <option value="Tourist">Tourist</option>
+                                </select>
+                                {errors.visaTypeFit && (
+                                  <span className="errorMsg">
+                                    {errors.visaTypeFit.message}
+                                  </span>
+                                )}
+                              </div>
+                            </Col>
+                            <Col md={3}>
+                              <div className="input__container">
+                                <label htmlFor="fitVisaTravelFrom">
+                                  Travel Date From
+                                  <span className="required_field">*</span>
+                                </label>
+                                <input
+                                  id="fitVisaTravelFrom"
+                                  name="fitVisaTravelFrom"
+                                  type="date"
+                                  className="input-element"
+                                  {...register("fitVisaTravelFrom", {
+                                    required: "Select Date",
+                                  })}
+                                />
+
+                                {errors.fitVisaTravelFrom && (
+                                  <span className="errorMsg">
+                                    {errors.fitVisaTravelFrom.message}
+                                  </span>
+                                )}
+                              </div>
+                            </Col>
+
+                            <Col md={3}>
+                              <div className="input__container">
+                                <label htmlFor="fitVisaTravelTo">
+                                  Travel Date To
+                                  <span className="required_field">*</span>
+                                </label>
+                                <input
+                                  id="fitVisaTravelTo"
+                                  name="fitVisaTravelTo"
+                                  type="date"
+                                  className="input-element"
+                                  {...register("fitVisaTravelTo", {
+                                    required: "Select Date",
+                                  })}
+                                />
+
+                                {errors.fitVisaTravelTo && (
+                                  <span className="errorMsg">
+                                    {errors.fitVisaTravelTo.message}
+                                  </span>
+                                )}
+                              </div>
+                            </Col>
+                          </Row>
+                        </div>
+                      </Row>
+                      {totalCountryVisad.map((item, index) => {
+                        return (
+                          <Row className="row__container" key={index}>
+                            <p className="services">Traveller {index + 1}</p>
+                            <Row>
                               <Col md={3}>
                                 <div className="input__container">
-                                  <label htmlFor={`TravelledBefore${index}`}>
-                                    Travelled Before
+                                  <label htmlFor={`passportNoFit${index}`}>
+                                    Passport No
                                     <span className="required_field">*</span>
                                   </label>
-                                  <Controller
-                                    name={`TravelledBefore${index}`}
-                                    control={control}
-                                    rules={{ required: "Select from list" }}
-                                    render={({ field }) => (
-                                      <Select
-                                        {...field}
-                                        options={travelBef}
-                                        isMulti
-                                        onChange={(selected) => {
-                                          field.onChange(selected);
-                                          handelChangeVisaFit(
-                                            index,
-                                            selected,
-                                            "travelBefore"
-                                          );
-                                          if (selected) {
-                                            clearErrors(
-                                              `TravelledBefore${index}`
-                                            );
-                                          }
-                                        }}
-                                        value={travelBeforeCountry[index] || []}
-                                      />
-                                    )}
+                                  <input
+                                    type="text"
+                                    id="passportNoFit"
+                                    className="input-element"
+                                    placeholder="Passport No"
+                                    name={`passportNoFit${index}`}
+                                    {...register(`passportNoFit${index}`, {
+                                      required: "Please enter Passport No",
+                                    })}
                                   />
-                                  {errors[`TravelledBefore${index}`] && (
+                                  {errors[`passportNoFit${index}`] && (
                                     <span className="errorMsg">
-                                      {
-                                        errors[`TravelledBefore${index}`]
-                                          .message
-                                      }
+                                      {errors[`passportNoFit${index}`].message}
                                     </span>
                                   )}
                                 </div>
@@ -2081,42 +2347,24 @@ Business or Tourist */}
 
                               <Col md={3}>
                                 <div className="input__container">
-                                  <label htmlFor={`HoldingValidVisa${index}`}>
-                                    Holding Valid Visa
+                                  <label htmlFor={`poi${index}`}>
+                                    POI
                                     <span className="required_field">*</span>
                                   </label>
-                                  <Controller
-                                    name={`HoldingValidVisa${index}`}
-                                    control={control}
-                                    rules={{ required: "Select from list" }}
-                                    render={({ field }) => (
-                                      <Select
-                                        {...field}
-                                        options={holdingValidVisa}
-                                        isMulti
-                                        onChange={(selected) => {
-                                          field.onChange(selected);
-                                          handelChangeVisaFit(
-                                            index,
-                                            selected,
-                                            "holdingVisa"
-                                          );
-                                          if (selected) {
-                                            clearErrors(
-                                              `HoldingValidVisa${index}`
-                                            );
-                                          }
-                                        }}
-                                        value={holdingCountryVisa[index] || []}
-                                      />
-                                    )}
+                                  <input
+                                    id="poi"
+                                    name={`poi${index}`}
+                                    type="text"
+                                    placeholder="Place of issue"
+                                    className="input-element"
+                                    {...register(`poi${index}`, {
+                                      required: "Select Date",
+                                    })}
                                   />
-                                  {errors[`HoldingValidVisa${index}`] && (
+
+                                  {errors[`poi${index}`] && (
                                     <span className="errorMsg">
-                                      {
-                                        errors[`HoldingValidVisa${index}`]
-                                          .message
-                                      }
+                                      {errors[`poi${index}`].message}
                                     </span>
                                   )}
                                 </div>
@@ -2124,45 +2372,187 @@ Business or Tourist */}
 
                               <Col md={3}>
                                 <div className="input__container">
-                                  <label htmlFor={`cityValidVisa${index}`}>
-                                    Apply From
+                                  <label htmlFor={`doi${index}`}>
+                                    DOI
                                     <span className="required_field">*</span>
                                   </label>
-                                  <Controller
-                                    name={`cityValidVisa${index}`}
-                                    control={control}
-                                    rules={{ required: "City is required" }}
-                                    render={({ field }) => (
-                                      <Select
-                                        {...field}
-                                        options={optionVisaCity}
-                                        isMulti
-                                        onChange={(selected) => {
-                                          field.onChange(selected);
-                                          handelChangeVisaFit(
-                                            index,
-                                            selected,
-                                            "cityValidVisaFit"
-                                          );
-                                          if (selected) {
-                                            clearErrors(
-                                              `cityValidVisa${index}`
-                                            );
-                                          }
-                                        }}
-                                        value={cityValidVisaFit[index] || []}
-                                      />
-                                    )}
+                                  <input
+                                    id="doi"
+                                    name={`doi${index}`}
+                                    type="date"
+                                    className="input-element"
+                                    {...register(`doi${index}`, {
+                                      required: "Select Date",
+                                    })}
                                   />
-                                  {errors[`cityValidVisa${index}`] && (
+
+                                  {errors[`doi${index}`] && (
                                     <span className="errorMsg">
-                                      {errors[`cityValidVisa${index}`].message}
+                                      {errors[`doi${index}`].message}
+                                    </span>
+                                  )}
+                                </div>
+                              </Col>
+                              <Col md={3}>
+                                <div className="input__container">
+                                  <label htmlFor={`doe${index}`}>
+                                    DOE
+                                    <span className="required_field">*</span>
+                                  </label>
+                                  <input
+                                    id="doe"
+                                    name={`doe${index}`}
+                                    type="date"
+                                    className="input-element"
+                                    {...register(`doe${index}`, {
+                                      required: "Select Date",
+                                    })}
+                                  />
+
+                                  {errors[`doe${index}`] && (
+                                    <span className="errorMsg">
+                                      {errors[`doe${index}`].message}
                                     </span>
                                   )}
                                 </div>
                               </Col>
                             </Row>
-                            {/* <Col md={3}>
+                            <Row className="row__container">
+                              <Row className="row__container">
+                                <Col md={3}>
+                                  <div className="input__container">
+                                    <label htmlFor={`TravelledBefore${index}`}>
+                                      Travelled Before
+                                      <span className="required_field">*</span>
+                                    </label>
+                                    <Controller
+                                      name={`TravelledBefore${index}`}
+                                      control={control}
+                                      rules={{ required: "Select from list" }}
+                                      render={({ field }) => (
+                                        <Select
+                                          {...field}
+                                          options={travelBef}
+                                          isMulti
+                                          onChange={(selected) => {
+                                            field.onChange(selected);
+                                            handelChangeVisaFit(
+                                              index,
+                                              selected,
+                                              "travelBefore"
+                                            );
+                                            if (selected) {
+                                              clearErrors(
+                                                `TravelledBefore${index}`
+                                              );
+                                            }
+                                          }}
+                                          value={
+                                            travelBeforeCountry[index] || []
+                                          }
+                                        />
+                                      )}
+                                    />
+                                    {errors[`TravelledBefore${index}`] && (
+                                      <span className="errorMsg">
+                                        {
+                                          errors[`TravelledBefore${index}`]
+                                            .message
+                                        }
+                                      </span>
+                                    )}
+                                  </div>
+                                </Col>
+
+                                <Col md={3}>
+                                  <div className="input__container">
+                                    <label htmlFor={`HoldingValidVisa${index}`}>
+                                      Holding Valid Visa
+                                      <span className="required_field">*</span>
+                                    </label>
+                                    <Controller
+                                      name={`HoldingValidVisa${index}`}
+                                      control={control}
+                                      rules={{ required: "Select from list" }}
+                                      render={({ field }) => (
+                                        <Select
+                                          {...field}
+                                          options={holdingValidVisa}
+                                          isMulti
+                                          onChange={(selected) => {
+                                            field.onChange(selected);
+                                            handelChangeVisaFit(
+                                              index,
+                                              selected,
+                                              "holdingVisa"
+                                            );
+                                            if (selected) {
+                                              clearErrors(
+                                                `HoldingValidVisa${index}`
+                                              );
+                                            }
+                                          }}
+                                          value={
+                                            holdingCountryVisa[index] || []
+                                          }
+                                        />
+                                      )}
+                                    />
+                                    {errors[`HoldingValidVisa${index}`] && (
+                                      <span className="errorMsg">
+                                        {
+                                          errors[`HoldingValidVisa${index}`]
+                                            .message
+                                        }
+                                      </span>
+                                    )}
+                                  </div>
+                                </Col>
+
+                                <Col md={3}>
+                                  <div className="input__container">
+                                    <label htmlFor={`cityValidVisa${index}`}>
+                                      Apply From
+                                      <span className="required_field">*</span>
+                                    </label>
+                                    <Controller
+                                      name={`cityValidVisa${index}`}
+                                      control={control}
+                                      rules={{ required: "City is required" }}
+                                      render={({ field }) => (
+                                        <Select
+                                          {...field}
+                                          options={optionVisaCity}
+                                          isMulti
+                                          onChange={(selected) => {
+                                            field.onChange(selected);
+                                            handelChangeVisaFit(
+                                              index,
+                                              selected,
+                                              "cityValidVisaFit"
+                                            );
+                                            if (selected) {
+                                              clearErrors(
+                                                `cityValidVisa${index}`
+                                              );
+                                            }
+                                          }}
+                                          value={cityValidVisaFit[index] || []}
+                                        />
+                                      )}
+                                    />
+                                    {errors[`cityValidVisa${index}`] && (
+                                      <span className="errorMsg">
+                                        {
+                                          errors[`cityValidVisa${index}`]
+                                            .message
+                                        }
+                                      </span>
+                                    )}
+                                  </div>
+                                </Col>
+                              </Row>
+                              {/* <Col md={3}>
                     <div className="input__container">
                       <label htmlFor="countryVisa">
                         Country
@@ -2187,7 +2577,7 @@ Business or Tourist */}
                           {errors.totalCountryVisa.message}
                         </span>
                       )} */}
-                            {/* <Controller
+                              {/* <Controller
                         name=" countryVisa"
                         control={control}
                         rules={{ required: "Select from list" }}
@@ -2213,164 +2603,33 @@ Business or Tourist */}
                           {errors.countryVisa.message}
                         </span>
                       )} */}
-                            {/* </div>
+                              {/* </div>
                   </Col> */}
+                            </Row>
                           </Row>
-                        </Row>
-                      );
-                    })}
-                  </>
-                )}
-                {/* Country/s			Type of Visa			No of Pax		  Apply from  */}
-                {watchAllFields.groupType == "Group" && (
-                  <>
-                    <Row className="row__container ">
-                      <p className="services">Visa Requirements</p>
+                        );
+                      })}
+                    </>
+                  )}
+                  {/* Country/s			Type of Visa			No of Pax		  Apply from  */}
+                  {watchAllFields.groupType == "Group" && (
+                    <>
+                      <Row className="row__container ">
+                        <p className="services">Visa Requirements</p>
 
-                      <Col md={4}>
-                        <div className="input__container">
-                          <label htmlFor="totalPaxVisaGroup">
-                            No of Pax <span className="required_field">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            id="totalPaxVisaGroup"
-                            className="input-element"
-                            placeholder="Number of Pax"
-                            name="totalPaxVisaGroup"
-                            {...register("totalPaxVisaGroup", {
-                              required: "Total No of Pax",
-                              pattern: {
-                                value: /^[0-9]+$/,
-                                message: "Enter Valid no",
-                              },
-                            })}
-                          />
-                          {errors.totalPaxVisaGroup && (
-                            <span className="errorMsg">
-                              {errors.totalPaxVisaGroup.message}
-                            </span>
-                          )}
-                        </div>
-                      </Col>
-                      <Col md={4}>
-                        <div className="input__container">
-                          <label htmlFor="visaCountryGroup">
-                            Country's / VISA Required
-                            <span className="required_field">*</span>
-                          </label>
-                          <Controller
-                            name="visaCountryGroup"
-                            control={control}
-                            rules={{ required: "Select from list" }}
-                            render={({ field }) => (
-                              <Select
-                                {...field}
-                                options={visaGroupCountrys}
-                                isMulti
-                                onChange={(selected) => {
-                                  field.onChange(selected);
-                                  setVisaCountryGroup(selected);
-                                  if (selected) {
-                                    clearErrors("visaCountryGroup");
-                                  }
-                                }}
-                                value={visaCountryGroup}
-                              />
-                            )}
-                          />
-
-                          {errors.visaCountryGroup && (
-                            <span className="errorMsg">
-                              {errors.visaCountryGroup.message}
-                            </span>
-                          )}
-                        </div>
-                      </Col>
-
-                      <Col md={4}>
-                        <div className="input__container">
-                          <label htmlFor="visaPreferredDurationGroup">
-                            Preferred duration{" "}
-                            <span className="required_field">*</span>
-                          </label>
-
-                          <select
-                            id="Place"
-                            name="visaPreferredDurationGroup"
-                            className="input-element"
-                            {...register("visaPreferredDurationGroup", {
-                              required: "Select from list",
-                            })}>
-                            <option value="">--Select--</option>
-                            <option value="6Months"> 6 months</option>
-                            <option value="2Yrs">2 Yrs.</option>
-                            <option value="5Yrs"> 5 Yrs.</option>
-                            <option value="10Yrs">10 Yrs</option>
-                            <option value="Multiple">Multiple</option>
-                            <option value="Groups">Groups</option>
-                            <option value="TransitVisa">Transit Visa</option>
-                            <option value="Other">Other</option>
-                          </select>
-                          {errors.visaPreferredDurationGroup && (
-                            <span className="errorMsg">
-                              {errors.visaPreferredDurationGroup.message}
-                            </span>
-                          )}
-                        </div>
-                      </Col>
-                    </Row>
-
-                    {rows.map((row, index) => (
-                      <Row key={index} className="row__container">
-                        <Col md={3}>
+                        <Col md={4}>
                           <div className="input__container">
-                            <label htmlFor={`visaApplyFrom${index}`}>
-                              Visa Apply From
-                            </label>
-                            <Controller
-                              name={`visaApplyFrom${index}`}
-                              control={control}
-                              rules={{ required: "City is required" }}
-                              render={({ field }) => (
-                                <Select
-                                  {...field}
-                                  options={optionGitVisaCity}
-                                  isMulti
-                                  onChange={(selected) => {
-                                    field.onChange(selected);
-                                    const newRows = [...rows];
-                                    newRows[index].gitCity = selected;
-                                    setRows(newRows);
-                                    if (selected) {
-                                      clearErrors(`visaApplyFrom${index}`);
-                                    }
-                                  }}
-                                  value={row.gitCity}
-                                />
-                              )}
-                            />
-                            {errors[`visaApplyFrom${index}`] && (
-                              <span className="errorMsg">
-                                {errors[`visaApplyFrom${index}`].message}
-                              </span>
-                            )}
-                          </div>
-                        </Col>
-
-                        <Col md={2}>
-                          <div className="input__container">
-                            <label htmlFor={`totlaPaxGit${index}`}>
-                              No of Pax{" "}
+                            <label htmlFor="totalPaxVisaGroup">
+                              Total Pax.{" "}
                               <span className="required_field">*</span>
                             </label>
                             <input
                               type="text"
-                              id={`totlaPaxGit${index}`}
+                              id="totalPaxVisaGroup"
                               className="input-element"
                               placeholder="Number of Pax"
-                              name={`totlaPaxGit${index}`}
-                              {...register(`totlaPaxGit${index}`, {
+                              name="totalPaxVisaGroup"
+                              {...register("totalPaxVisaGroup", {
                                 required: "Total No of Pax",
                                 pattern: {
                                   value: /^[0-9]+$/,
@@ -2378,37 +2637,43 @@ Business or Tourist */}
                                 },
                               })}
                             />
-                            {errors[`totlaPaxGit${index}`] && (
+                            {errors.totalPaxVisaGroup && (
                               <span className="errorMsg">
-                                {errors[`totlaPaxGit${index}`].message}
+                                {errors.totalPaxVisaGroup.message}
                               </span>
                             )}
                           </div>
                         </Col>
-
-                        <Col md={2}>
+                        <Col md={4}>
                           <div className="input__container">
-                            <label htmlFor={`gitVisaDays${index}`}>
-                              Total Days
+                            <label htmlFor="visaCountryGroup">
+                              Country's / VISA Required
                               <span className="required_field">*</span>
                             </label>
-                            <input
-                              type="text"
-                              id={`gitVisaDays${index}`}
-                              className="input-element"
-                              placeholder="Number of Pax"
-                              name={`gitVisaDays${index}`}
-                              {...register(`gitVisaDays${index}`, {
-                                required: "No of Days",
-                                pattern: {
-                                  value: /^[0-9]+$/,
-                                  message: "Enter Valid no",
-                                },
-                              })}
+                            <Controller
+                              name="visaCountryGroup"
+                              control={control}
+                              rules={{ required: "Select from list" }}
+                              render={({ field }) => (
+                                <Select
+                                  {...field}
+                                  options={visaGroupCountrys}
+                                  isMulti
+                                  onChange={(selected) => {
+                                    field.onChange(selected);
+                                    setVisaCountryGroup(selected);
+                                    if (selected) {
+                                      clearErrors("visaCountryGroup");
+                                    }
+                                  }}
+                                  value={visaCountryGroup}
+                                />
+                              )}
                             />
-                            {errors[`gitVisaDays${index}`] && (
+
+                            {errors.visaCountryGroup && (
                               <span className="errorMsg">
-                                {errors[`gitVisaDays${index}`].message}
+                                {errors.visaCountryGroup.message}
                               </span>
                             )}
                           </div>
@@ -2416,64 +2681,211 @@ Business or Tourist */}
 
                         <Col md={4}>
                           <div className="input__container">
-                            <label htmlFor={`Remarks${index}`}>
-                              Remarks <span className="required_field">*</span>
+                            <label htmlFor="visaPreferredDurationGroup">
+                              Preferred duration{" "}
+                              <span className="required_field">*</span>
                             </label>
-                            <input
-                              type="text"
-                              id={`Remarks${index}`}
+
+                            <select
+                              id="Place"
+                              name="visaPreferredDurationGroup"
                               className="input-element"
-                              placeholder="Remarks"
-                              name={`Remarks${index}`}
-                              {...register(`Remarks${index}`, {
-                                required: "Enter your remarks here",
-                              })}
-                            />
-                            {errors[`Remarks${index}`] && (
+                              {...register("visaPreferredDurationGroup", {
+                                required: "Select from list",
+                              })}>
+                              <option value="">--Select--</option>
+                              <option value="6Months"> 6 months</option>
+                              <option value="2Yrs">2 Yrs.</option>
+                              <option value="5Yrs"> 5 Yrs.</option>
+                              <option value="10Yrs">10 Yrs</option>
+                              <option value="Multiple">Multiple</option>
+                              <option value="Groups">Groups</option>
+                              <option value="TransitVisa">Transit Visa</option>
+                              <option value="Other">Other</option>
+                            </select>
+                            {errors.visaPreferredDurationGroup && (
                               <span className="errorMsg">
-                                {errors[`Remarks${index}`].message}
+                                {errors.visaPreferredDurationGroup.message}
                               </span>
                             )}
                           </div>
                         </Col>
-                        <Col md={1} className="d-flex align-items-end">
-                          <Button
-                            type="button"
-                            className="btn btn-danger"
-                            size="sm"
-                            onClick={() => removeRowFunction(index)}>
-                            Remove
-                          </Button>
-                        </Col>
                       </Row>
-                    ))}
-                    <Button
-                      className="mt-4"
-                      size="sm"
-                      onClick={addEntireRowFunction}>
-                      Add City Section
-                    </Button>
-                    <Row className="row__container mt-5">
-                      <a
-                        className="sheetLink"
-                        target="_blank"
-                        href="https://docs.google.com/spreadsheets/d/1xb9b8m9jvvvmqN2tqjdBe-eGuuiO26vgV6IhqLmFnHk/edit?usp=sharing">
-                        <Button size="sm" variant="danger">
-                          Insert your data here
-                        </Button>
-                      </a>
-                    </Row>
-                  </>
-                )}
 
-                {/* {totalCountryVisad.map((item, index) => {
+                      {rowFields.map((field, index) => (
+                        <Row key={field.id} className="row__container">
+                          <Col md={3}>
+                            <div className="input__container">
+                              <label htmlFor={`visaApplyFrom${index}`}>
+                                Visa Apply From
+                              </label>
+                              <Controller
+                                name={`visaApplyFrom${index}`}
+                                control={control}
+                                rules={{ required: "City is required" }}
+                                render={({ field }) => (
+                                  <Select
+                                    {...field}
+                                    options={optionGitVisaCity}
+                                    isMulti
+                                    onChange={(selected) => {
+                                      field.onChange(selected);
+                                      handelChangeVisaFit(
+                                        index,
+                                        selected,
+                                        "visaApplyFrom"
+                                      );
+
+                                      // const newRows = [...rowFields];
+                                      // newRows[index].gitCity = selected;
+                                      // setRows(newRows);
+                                      if (selected) {
+                                        clearErrors(`visaApplyFrom${index}`);
+                                      }
+                                    }}
+                                    value={visaApplyFrom[index] || []}
+                                  />
+                                )}
+                              />
+                              {errors[`visaApplyFrom${index}`] && (
+                                <span className="errorMsg">
+                                  {errors[`visaApplyFrom${index}`].message}
+                                </span>
+                              )}
+                            </div>
+                          </Col>
+
+                          <Col md={2}>
+                            <div className="input__container">
+                              <label htmlFor={`rows.${index}.totlaPaxGit`}>
+                                No of Pax{" "}
+                                <span className="required_field">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                id={`rows.${index}.totlaPaxGit`}
+                                className="input-element"
+                                placeholder="Number of Pax"
+                                {...register(`rows.${index}.totlaPaxGit`, {
+                                  required: "Total No of Pax is required",
+                                  pattern: {
+                                    value: /^[0-9]+$/,
+                                    message: "Enter a valid number",
+                                  },
+                                })}
+                              />
+                              {errors?.rows?.[index]?.totlaPaxGit && (
+                                <span className="errorMsg">
+                                  {errors.rows[index].totlaPaxGit.message}
+                                </span>
+                              )}
+
+                              {errors.totalSum && (
+                                <span className="errorMsg">
+                                  {errors.totalSum.message}
+                                </span>
+                              )}
+                            </div>
+                          </Col>
+
+                          <Col md={2}>
+                            <div className="input__container">
+                              <label htmlFor={`gitVisaDays${index}`}>
+                                Total Days
+                                <span className="required_field">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                id={`gitVisaDays${index}`}
+                                className="input-element"
+                                placeholder="Number of Pax"
+                                name={`gitVisaDays${index}`}
+                                {...register(`gitVisaDays${index}`, {
+                                  required: "No of Days",
+                                  pattern: {
+                                    value: /^[0-9]+$/,
+                                    message: "Enter Valid no",
+                                  },
+                                })}
+                              />
+
+                              {errors[`gitVisaDays${index}`] && (
+                                <span className="errorMsg">
+                                  {errors[`gitVisaDays${index}`].message}
+                                </span>
+                              )}
+                            </div>
+                          </Col>
+
+                          <Col md={4}>
+                            <div className="input__container">
+                              <label htmlFor={`Remarks${index}`}>
+                                Remarks{" "}
+                                <span className="required_field">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                id={`Remarks${index}`}
+                                className="input-element"
+                                placeholder="Remarks"
+                                name={`Remarks${index}`}
+                                {...register(`Remarks${index}`, {
+                                  required: "Enter your remarks here",
+                                })}
+                              />
+                              {errors[`Remarks${index}`] && (
+                                <span className="errorMsg">
+                                  {errors[`Remarks${index}`].message}
+                                </span>
+                              )}
+                            </div>
+                          </Col>
+                          <Col md={1}>
+                            <Button
+                              type="button"
+                              className="btn btn-danger mt-4"
+                              size="sm"
+                              onClick={() => removeRow(index)}>
+                              Remove
+                            </Button>
+                          </Col>
+                        </Row>
+                      ))}
+
+                      <Button
+                        className="mt-4"
+                        size="sm"
+                        onClick={() =>
+                          appendRow({
+                            visaApplyFrom: "",
+                            totlaPaxGit: "",
+                            gitVisaDays: "",
+                            Remarks: "",
+                          })
+                        }>
+                        Add City Section
+                      </Button>
+                      <Row className="row__container mt-5">
+                        <a
+                          className="sheetLink"
+                          target="_blank"
+                          href="https://docs.google.com/spreadsheets/d/1xb9b8m9jvvvmqN2tqjdBe-eGuuiO26vgV6IhqLmFnHk/edit?usp=sharing">
+                          <Button size="sm" variant="danger">
+                            Insert your data here
+                          </Button>
+                        </a>
+                      </Row>
+                    </>
+                  )}
+
+                  {/* {totalCountryVisad.map((item, index) => {
                   return (
                   
                   );
                 })} */}
 
-                <Row className="row__container">
-                  {/* <Col md={3}>
+                  <Row className="row__container">
+                    {/* <Col md={3}>
                     <div className="input__container">
                       <label htmlFor="countriesTraveled">
                         Countries Travelled
@@ -2496,65 +2908,67 @@ Business or Tourist */}
                       )}
                     </div>
                   </Col> */}
-                </Row>
-                <Row className="row__container">
-                  <Col md={3} xs={6}>
-                    <div className="input__container">
-                      <a
-                        target="_blank"
-                        href="https://drive.google.com/drive/folders/18KdD9h_uh0U-_zRTKyl_rqurB8upWBgF?usp=sharing">
-                        <Button size="sm" variant="success">
-                          Upload Passport
-                        </Button>
-                      </a>
-                      {/* <input
+                  </Row>
+
+                  <Row className="row__container">
+                    <Col md={3} xs={6}>
+                      <div className="input__container">
+                        <a
+                          target="_blank"
+                          href="https://drive.google.com/drive/folders/18KdD9h_uh0U-_zRTKyl_rqurB8upWBgF?usp=sharing">
+                          <Button size="sm" variant="success">
+                            Upload Passport
+                          </Button>
+                        </a>
+                        {/* <input
                         type="button"
                         id="myfile"
                         name="passportCopy"
                         style={{ color: "white" }}
                       /> */}
-                    </div>
-                  </Col>
-                  <Col md={3} xs={6}>
-                    <div className="input__container">
-                      <a
-                        href="https://drive.google.com/drive/folders/1p_Ggu-9DFHedeO1mal35UGRu0poe6CcS?usp=sharing"
-                        target="_blank">
-                        <Button size="sm" variant="success">
-                          Upload Visa Form
-                        </Button>
-                      </a>
-                    </div>
-                  </Col>
+                      </div>
+                    </Col>
+                    <Col md={3} xs={6}>
+                      <div className="input__container">
+                        <a
+                          href="https://drive.google.com/drive/folders/1p_Ggu-9DFHedeO1mal35UGRu0poe6CcS?usp=sharing"
+                          target="_blank">
+                          <Button size="sm" variant="success">
+                            Upload Visa Form
+                          </Button>
+                        </a>
+                      </div>
+                    </Col>
 
-                  <Col md={3} xs={6}>
-                    <div className="input__container">
-                      <a
-                        target="_blank"
-                        href="https://drive.google.com/drive/folders/1CPSOhxY67eZ45mns0SRC1j5rSJiIogns?usp=sharing">
-                        <Button size="sm" variant="success">
-                          Upload Other Docs
-                        </Button>
-                      </a>
-                    </div>
-                  </Col>
+                    <Col md={3} xs={6}>
+                      <div className="input__container">
+                        <a
+                          target="_blank"
+                          href="https://drive.google.com/drive/folders/1CPSOhxY67eZ45mns0SRC1j5rSJiIogns?usp=sharing">
+                          <Button size="sm" variant="success">
+                            Upload Other Docs
+                          </Button>
+                        </a>
+                      </div>
+                    </Col>
 
-                  <Col md={3} xs={6}>
-                    <div className="input__container">
-                      <a
-                        target="_blank"
-                        href="https://drive.google.com/drive/folders/1tT5txXDHYPbM5cHpVFJEH6ahhWaxEHPR?usp=sharing">
-                        <Button size="sm" variant="success">
-                          Upload Photo
-                        </Button>
-                      </a>
-                    </div>
-                  </Col>
-                </Row>
-              </>
-            )}
+                    <Col md={3} xs={6}>
+                      <div className="input__container">
+                        <a
+                          target="_blank"
+                          href="https://drive.google.com/drive/folders/1tT5txXDHYPbM5cHpVFJEH6ahhWaxEHPR?usp=sharing">
+                          <Button size="sm" variant="success">
+                            Upload Photo
+                          </Button>
+                        </a>
+                      </div>
+                    </Col>
+                  </Row>
+                </>
+              )}
 
             {watchAllFields.groupType == "Group" &&
+              watchAllFields.destination === "international" &&
               watchAllFields.insurance && (
                 <>
                   <Row className="row__container">
@@ -2591,15 +3005,13 @@ Business or Tourist */}
                       <div className="input__container">
                         <label htmlFor="insurancePlanGroup">
                           Insurance plan{" "}
-                          <span className="required_field">*</span>
+                          {/* <span className="required_field">*</span> */}
                         </label>
                         <select
                           id="hotelCategory"
                           name="insurancePlanGroup"
                           className="input-element"
-                          {...register("insurancePlanGroup", {
-                            required: "Select from list",
-                          })}>
+                          {...register("insurancePlanGroup")}>
                           <option value="">--Select--</option>
                           <option value="Smart">Smart</option>
                           <option value="Style"> Style</option>
@@ -2607,11 +3019,6 @@ Business or Tourist */}
                           <option value="Style"> Care Plan</option>
                           <option value="Group">Group</option>
                         </select>
-                        {errors.insurancePlanGroup && (
-                          <span className="errorMsg">
-                            {errors.insurancePlanGroup.message}
-                          </span>
-                        )}
                       </div>
                     </Col>
                     {/* <Col md={3}>
@@ -2727,6 +3134,7 @@ Business or Tourist */}
                 </>
               )}
             {watchAllFields.groupType == "Individual" &&
+              watchAllFields.destination === "international" &&
               watchAllFields.insurance && (
                 <>
                   <Row className="row__container">
@@ -2763,15 +3171,13 @@ Business or Tourist */}
                       <div className="input__container">
                         <label htmlFor="insurancePlan">
                           Insurance plan{" "}
-                          <span className="required_field">*</span>
+                          {/* <span className="required_field">*</span> */}
                         </label>
                         <select
                           id="hotelCategory"
                           name="insurancePlan"
                           className="input-element"
-                          {...register("insurancePlan", {
-                            required: "Select from list",
-                          })}>
+                          {...register("insurancePlan")}>
                           <option value="">--Select--</option>
                           <option value="Smart">Smart</option>
                           <option value="Style"> Style</option>
@@ -2779,18 +3185,18 @@ Business or Tourist */}
                           <option value="Style"> Care Plan</option>
                           <option value="Group">Group</option>
                         </select>
-                        {errors.insurancePlan && (
+                        {/* {errors.insurancePlan && (
                           <span className="errorMsg">
                             {errors.insurancePlan.message}
                           </span>
-                        )}
+                        )} */}
                       </div>
                     </Col>
                     <Col md={3}>
                       <div className="input__container">
                         <label htmlFor="insuranceAmount">
                           Insurance Amount{" "}
-                          <span className="required_field">*</span>
+                          {/* <span className="required_field">*</span> */}
                         </label>
                         <input
                           type="text"
@@ -3397,15 +3803,15 @@ Business or Tourist */}
                   <p className="services">Audio Visuals & Light</p>
                   <Col md={3}>
                     <div className="input__container">
-                      <label htmlFor="UPSGreenGensets ">
+                      <label htmlFor="lights">
                         Lights
                         <span className="required_field">*</span>
                       </label>
                       <select
-                        id="UPSGreenGensets"
-                        name="UPSGreenGensets"
+                        id="lights"
+                        name="lights"
                         className="input-element"
-                        {...register("UPSGreenGensets", {
+                        {...register("lights", {
                           required: "Select from list",
                         })}>
                         <option value="">Select</option>
@@ -3419,9 +3825,9 @@ Business or Tourist */}
                         <option value="Light-Wash">Light-Wash</option>
                         <option value="Light">Light</option>
                       </select>
-                      {errors.UPSGreenGensets && (
+                      {errors.lights && (
                         <span className="errorMsg">
-                          {errors.UPSGreenGensets.message}
+                          {errors.lights.message}
                         </span>
                       )}
                     </div>
@@ -3577,7 +3983,7 @@ Business or Tourist */}
                   </Col>
                   <Col md={3}>
                     <div className="input__container">
-                      <label htmlFor="LED Walls">
+                      <label htmlFor="LEDWalls">
                         LED Walls
                         <span className="required_field">*</span>
                       </label>
@@ -3651,7 +4057,7 @@ Business or Tourist */}
                   )}
                   <Col md={2}>
                     <div className="input__container">
-                      <label htmlFor="Photographer">
+                      <label htmlFor="Videographer">
                         Videographer
                         <span className="required_field">*</span>
                       </label>
@@ -3791,18 +4197,18 @@ Business or Tourist */}
                 <>
                   <Row className="row__container">
                     <p className="services">Travel bookings Details</p>
-                    <Col md={6}>
+                    <Col md={4}>
                       <div className="input__container">
-                        <label htmlFor="totalPax">
+                        <label htmlFor="totalPaxTravel">
                           Total Pax <span className="required_field">*</span>
                         </label>
                         <input
                           type="text"
-                          id="totalPax"
+                          id="totalPaxTravel"
                           className="input-element"
                           placeholder="Total pax"
-                          name="totalPax"
-                          {...register("totalPax", {
+                          name="totalPaxTravel"
+                          {...register("totalPaxTravel", {
                             required: "Please enter no of pax",
                             pattern: {
                               value: /^[0-9]+$/,
@@ -3810,83 +4216,267 @@ Business or Tourist */}
                             },
                           })}
                         />
-                        {errors.totalPax && (
+                        {errors.totalPaxTravel && (
                           <span className="errorMsg">
-                            {errors.totalPax.message}
+                            {errors.totalPaxTravel.message}
                           </span>
                         )}
                       </div>
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       <div className="input__container">
-                        <label htmlFor="departureCity">
-                          Departure City / No of Pax.
+                        <label htmlFor="departureDateFlight">
+                          Departure Date
                           <span className="required_field">*</span>
                         </label>
-
                         <Controller
-                          name="departureCityTotPax"
+                          id="departureDateFlight"
+                          name="departureDateFlight"
+                          className="input-element"
                           control={control}
-                          rules={{
-                            required: "Select city and Tol. pax from list",
-                          }}
+                          rules={{ required: "Departure Date is required" }}
                           render={({ field }) => (
-                            <Select
-                              {...field}
-                              options={departureCity}
-                              isMulti
-                              onChange={(selected) => {
-                                field.onChange(selected);
-                                setSelectedDepartue(selected);
-                                if (selected) {
-                                  clearErrors("departureCityTotPax");
-                                }
-                              }}
-                              value={selectedOptionDeparture}
+                            <DatePicker
+                              className="input-element"
+                              selected={field.value}
+                              startDate={watchAllFields.departureDateFlight}
+                              dateFormat="d MMMM, yyyy"
+                              placeholderText="Select Departure Date"
+                              onChange={(date) => field.onChange(date)}
                             />
                           )}
                         />
-                        {errors.departureCityTotPax && (
-                          <span className="errorMsg">
-                            {errors.departureCityTotPax.message}
-                          </span>
-                        )}
 
-                        {/* <Select
-                          isMulti
-                          name="departureCityTotPax"
-                          {...register("departureCityTotPax", {
-                            required: "Select city and Tol. pax from list",
-                          })}
-                          defaultValue={selectedOptionDeparture}
-                          onChange={setSelectedDepartue}
-                          options={departureCity}
+                        {!watchAllFields.departureDateFlight &&
+                          errors.departureDateFlight && (
+                            <span className="errorMsg">
+                              {errors.departureDateFlight.message}
+                            </span>
+                          )}
+                        {dateError && (
+                          <span className="errorMsg">{dateError}</span>
+                        )}
+                      </div>
+                    </Col>
+                    <Col md={4}>
+                      <div className="input__container">
+                        <label htmlFor="returnDateFlight">
+                          Return Date
+                          <span className="required_field">*</span>
+                        </label>
+                        <Controller
+                          name="returnDateFlight"
+                          control={control}
+                          rules={{
+                            required: "Return Date is required",
+                            validate: (value) =>
+                              (value && value >= departureDateFlight) ||
+                              "Return date must be after departure date",
+                          }}
+                          render={({ field }) => (
+                            <DatePicker
+                              selected={field.value}
+                              className="input-element"
+                              placeholderText="Select Return Date"
+                              dateFormat="d MMMM, yyyy"
+                              onChange={(date) => field.onChange(date)}
+                              minDate={watch("departureDateFlight")}
+                            />
+                          )}
                         />
-                        {errors.departureCityTotPax && (
-                          <span className="errorMsg">
-                            {errors.departureCityTotPax.message}
-                          </span>
-                        )} */}
+
+                        {!watchAllFields.returnDateFlight &&
+                          errors.returnDateFlight && (
+                            <span className="errorMsg">
+                              {errors.returnDateFlight.message}
+                            </span>
+                          )}
                       </div>
                     </Col>
                   </Row>
+                  {fieldDepartureCity.map((field, index) => (
+                    <Row key={field.id} className="row__container">
+                      <Col md={3}>
+                        <div className="input__container">
+                          <label htmlFor={`departureCityTravel${index}`}>
+                            Departure City
+                          </label>
+                          <Controller
+                            name={`departureCityTravel${index}`}
+                            control={control}
+                            rules={{ required: "City is required" }}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                options={optionCityTravel}
+                                isMulti
+                                onChange={(selected) => {
+                                  field.onChange(selected);
+                                  handelChangeVisaFit(
+                                    index,
+                                    selected,
+                                    "departureCityTravel"
+                                  );
+                                  if (selected) {
+                                    clearErrors(`departureCityTravel${index}`);
+                                  }
+                                }}
+                                value={departureCityTravel[index] || []}
+                              />
+                            )}
+                          />
+                          {errors[`departureCityTravel${index}`] && (
+                            <span className="errorMsg">
+                              {errors[`departureCityTravel${index}`].message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+                      <Col md={3}>
+                        <div className="input__container">
+                          <label htmlFor={`cityPaxTravel${index}`}>
+                            No of Pax <span className="required_field">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            id={`cityPaxTravel${index}`}
+                            className="input-element"
+                            placeholder="Number of Pax"
+                            {...register(`TravelRow.${index}.cityPaxTravel`, {
+                              required: "Total No of Pax is required",
+                              pattern: {
+                                value: /^[0-9]+$/,
+                                message: "Enter a valid number",
+                              },
+                            })}
+                          />
+                          {errors?.TravelRow?.[index]?.cityPaxTravel && (
+                            <span className="errorMsg">
+                              {errors.TravelRow[index].cityPaxTravel.message}
+                            </span>
+                          )}
+
+                          {errors.totalSumTravel && (
+                            <span className="errorMsg">
+                              {errors.totalSumTravel.message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+                      <Col md={3}>
+                        <div className="input__container">
+                          <label htmlFor={`travelClass${index}`}>
+                            Class of Travel
+                            <span className="required_field">*</span>
+                          </label>
+                          <Controller
+                            name={`travelClass${index}`}
+                            control={control}
+                            rules={{ required: "Travel Class required" }}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                options={classTravel}
+                                onChange={(selected) => {
+                                  field.onChange(selected);
+                                  handelChangeVisaFit(
+                                    index,
+                                    selected,
+                                    "travelClass"
+                                  );
+                                  if (selected) {
+                                    clearErrors(`travelClass${index}`);
+                                  }
+                                }}
+                                value={travelClass[index] || []}
+                              />
+                            )}
+                          />
+                          {errors[`travelClass${index}`] && (
+                            <span className="errorMsg">
+                              {errors[`travelClass${index}`].message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+                      <Col md={2}>
+                        <div className="input__container">
+                          <label htmlFor={`departureTimeTravel${index}`}>
+                            Preferred Dep Time
+                            <span className="required_field">*</span>
+                          </label>
+                          <input
+                            type="time"
+                            id={`departureTimeTravel${index}`}
+                            className="input-element"
+                            placeholder="Enter Time"
+                            name={`departureTimeTravel${index}`}
+                            {...register(`departureTimeTravel${index}`, {
+                              required: "Enter your Departue Time",
+                            })}
+                          />
+
+                          {errors[`departureTimeTravel${index}`] && (
+                            <span className="errorMsg">
+                              {errors[`departureTimeTravel${index}`].message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+                      <Col md={1} className="d-flex align-items-end">
+                        <Button
+                          type="button"
+                          className="btn btn-danger"
+                          size="sm"
+                          onClick={() => removeTravelRow(index)}>
+                          Remove
+                        </Button>
+                      </Col>
+                    </Row>
+                  ))}
+
+                  <Button
+                    className="mt-4"
+                    size="sm"
+                    onClick={() =>
+                      appendTravelRow({
+                        departureCityTravel: null,
+                        cityPaxTravel: null,
+                        travelClass: null,
+                        departureTimeTravel: null,
+                      })
+                    }>
+                    Add City Section
+                  </Button>
+                  <br />
+
                   <Row className="row__container">
-                    <Col md={6}>
+                    <Col md={3} xs={6}>
                       <div className="input__container">
-                        <label htmlFor="preferedAirline">
-                          Preferred Airline{" "}
-                        </label>
-                        <input
-                          type="text"
-                          className="input-element"
-                          id="preferedAirline"
-                          placeholder="Preferred Airlines"
-                          name="preferedAirline"
-                          {...register("preferedAirline")}
-                        />
+                        <a
+                          target="_blank"
+                          href="https://drive.google.com/drive/folders/18KdD9h_uh0U-_zRTKyl_rqurB8upWBgF?usp=sharing">
+                          <Button size="sm" variant="success">
+                            Upload Passport
+                          </Button>
+                        </a>
                       </div>
                     </Col>
-                    <Col md={6}>
+
+                    <Col md={3} xs={6}>
+                      <div className="input__container">
+                        <a
+                          target="_blank"
+                          href="https://drive.google.com/drive/folders/1CPSOhxY67eZ45mns0SRC1j5rSJiIogns?usp=sharing">
+                          <Button size="sm" variant="success">
+                            Upload Other Docs
+                          </Button>
+                        </a>
+                      </div>
+                    </Col>
+                  </Row>
+                  {/* <Row className="row__container">
+                    <Col md={3}>
                       <div className="input__container">
                         <label htmlFor="preferedArrivalTime">
                           Preferred Arrival Time{" "}
@@ -3912,9 +4502,7 @@ Business or Tourist */}
                         )}
                       </div>
                     </Col>
-                  </Row>
-                  <Row className="row__container">
-                    <Col md={6}>
+                    <Col md={3}>
                       <div className="input__container">
                         <label htmlFor="preferedDepartureTime">
                           Preferred Departure Time{" "}
@@ -3968,7 +4556,7 @@ Business or Tourist */}
                         )}
                       </div>
                     </Col>
-                  </Row>
+                  </Row> */}
 
                   {/* <div className="form-group">
                       <p className="head_ques">
@@ -4001,7 +4589,7 @@ Business or Tourist */}
                   <Col md={watchAllFields.purposeOfTravel === "Others" ? 3 : 4}>
                     <div className="input__container">
                       <label htmlFor="purposeOfTravel">
-                        Purpose of Travel{" "}
+                        Purpose of Travel
                         <span className="required_field">*</span>
                       </label>
                       <select
@@ -4163,155 +4751,57 @@ Business or Tourist */}
                   </Col>
                   <Col md={4}>
                     <div className="input__container">
-                      <label htmlFor="upgrade__comp">
-                        Upgrades Complementry
-                        <span className="required_field">*</span>
-                      </label>
-
+                      <label htmlFor="mealPlan">Meal Plan</label>
                       <Controller
-                        name="upgrade__comp"
+                        name="mealPlan"
                         control={control}
-                        rules={{
-                          required: "Select from list",
-                        }}
                         render={({ field }) => (
                           <Select
                             {...field}
-                            options={upgradeComplemHotel}
                             isMulti
                             onChange={(selected) => {
                               field.onChange(selected);
-                              setUpgradeComp(selected);
+                              setSelectMealPlan(selected);
                               if (selected) {
-                                clearErrors("upgrade__comp");
+                                clearErrors("mealPlan");
                               }
                             }}
-                            value={selectedUpgradComp}
+                            value={selectMealPlan}
+                            options={mealPlan}
                           />
                         )}
                       />
-
-                      {/* <select
-                        id="upgrade__comp"
-                        name="upgrade__comp"
-                        className="input-element"
-                        {...register("upgrade__comp", {
-                          required: "Select from list",
-                        })}>
-                        <option value="">--Select--</option>
-                        <option value="ClubRoom">Club Room </option>
-                        <option value="JrSuite">Jr.Suite</option>
-                        <option value="suite">Suite</option>
-                        <option value="JrSuite">Dlx Suite</option>
-                        <option value="PreSuite">Pres Suite</option>
-                        <option value="Other">Other</option>
-                      </select> */}
-                      {errors.upgrade__comp && (
-                        <span className="errorMsg">
-                          {errors.upgrade__comp.message}
-                        </span>
-                      )}
                     </div>
                   </Col>
                 </Row>
                 <Row className="row__container">
                   <Col md={4}>
                     <div className="input__container">
-                      <label htmlFor="upgrade__Paid">
-                        Upgrades Paid
-                        <span className="required_field">*</span>
-                      </label>
-
-                      <Controller
-                        name="upgrade__Paid"
-                        control={control}
-                        rules={{
-                          required: "Select from list",
-                        }}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            options={upgradePaidHotel}
-                            isMulti
-                            onChange={(selected) => {
-                              field.onChange(selected);
-                              setUpgradePaid(selected);
-                              if (selected) {
-                                clearErrors("upgrade__Paid");
-                              }
-                            }}
-                            value={selectedUpgradPaid}
-                          />
-                        )}
-                      />
-
-                      {errors.upgrade__Paid && (
-                        <span className="errorMsg">
-                          {errors.upgrade__Paid.message}
-                        </span>
-                      )}
-                    </div>
-                  </Col>
-                  <Col md={4}>
-                    <div className="input__container">
-                      <label htmlFor="mealPlan">
-                        Meal Plan
-                        <span className="required_field">*</span>
-                      </label>
-                      <select
-                        id="mealPlan"
-                        name="mealPlan"
-                        className="input-element"
-                        {...register("mealPlan", {
-                          required: "Select from list",
-                        })}>
-                        <option value="">--Select--</option>
-                        <option value="CPAI">CPAI </option>
-                        <option value="MAPAI">MAPAI</option>
-                        <option value="APAI">APAI</option>
-                        <option value="AP + SNACKS">AP + SNACKS </option>
-                      </select>
-                      {errors.mealPlan && (
-                        <span className="errorMsg">
-                          {errors.mealPlan.message}
-                        </span>
-                      )}
-                    </div>
-                  </Col>
-
-                  <Col md={4}>
-                    <div className="input__container">
-                      <label htmlFor="mealPlan">
+                      <label htmlFor="mealRate">
                         Meal Rate
-                        <span className="required_field">*</span>
+                        {/* <span className="required_field">*</span> */}
                       </label>
-                      <select
-                        id="mealPlan"
-                        name="mealPlan"
-                        className="input-element"
-                        {...register("mealRate", {
-                          required: "Select from list",
-                        })}>
-                        <option value="">--Select--</option>
-                        <option value="CPAI">Breakfast </option>
-                        <option value="MAPAI">Lunch</option>
-                        <option value="APAI">Dinner</option>
-                        <option value="AP + SNACKS">Hi-Tea </option>
-                        <option value="APAI">Dinner</option>
-                        <option value="Snacks">Snacks </option>
-                        <option value="Gala Dinner with snacks">
-                          Gala Dinner with snacks
-                        </option>
-                      </select>
-                      {errors.mealRate && (
-                        <span className="errorMsg">
-                          {errors.mealRate.message}
-                        </span>
-                      )}
+                      <Controller
+                        name="mealRate"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            isMulti
+                            onChange={(selected) => {
+                              field.onChange(selected);
+                              setSelectMealRate(selected);
+                              if (selected) {
+                                clearErrors("mealRate");
+                              }
+                            }}
+                            value={selectMealRate}
+                            options={mealRate}
+                          />
+                        )}
+                      />
                     </div>
                   </Col>
-                </Row>
-                <Row className="row__container">
                   <Col md={4}>
                     <div className="input__container">
                       <label htmlFor="liquor">
@@ -4328,6 +4818,7 @@ Business or Tourist */}
                         <option value="">--Select--</option>
                         <option value="BASIC">BASIC </option>
                         <option value="PREMIUM">PREMIUM</option>
+                        <option value="NOT-REQUIRED">NOT REQUIRED</option>
                       </select>
                       {errors.liquor && (
                         <span className="errorMsg">
@@ -4336,32 +4827,34 @@ Business or Tourist */}
                       )}
                     </div>
                   </Col>
-
-                  <Col md={4}>
-                    <div className="input__container">
-                      <label htmlFor="liquorPackage">
-                        Liquor Package
-                        <span className="required_field">*</span>
-                      </label>
-                      <select
-                        id="liquor"
-                        name="liquorPackage"
-                        className="input-element"
-                        {...register("liquorPackage", {
-                          required: "Select from list",
-                        })}>
-                        <option value="">--Select--</option>
-                        <option value="BASIC">2 HR </option>
-                        <option value="PREMIUM">3 HR</option>
-                        <option value="By Bottle">By Bottle</option>
-                      </select>
-                      {errors.liquorPackage && (
-                        <span className="errorMsg">
-                          {errors.liquorPackage.message}
-                        </span>
-                      )}
-                    </div>
-                  </Col>
+                  {(watchAllFields.liquor === "BASIC" ||
+                    watchAllFields.liquor === "PREMIUM") && (
+                    <Col md={4}>
+                      <div className="input__container">
+                        <label htmlFor="liquorPackage">
+                          Liquor Package
+                          <span className="required_field">*</span>
+                        </label>
+                        <select
+                          id="liquor"
+                          name="liquorPackage"
+                          className="input-element"
+                          {...register("liquorPackage", {
+                            required: "Select from list",
+                          })}>
+                          <option value="">--Select--</option>
+                          <option value="BASIC">2 HR </option>
+                          <option value="PREMIUM">3 HR</option>
+                          <option value="By Bottle">By Bottle</option>
+                        </select>
+                        {errors.liquorPackage && (
+                          <span className="errorMsg">
+                            {errors.liquorPackage.message}
+                          </span>
+                        )}
+                      </div>
+                    </Col>
+                  )}
                 </Row>
 
                 <Row className="row__container">
@@ -4395,7 +4888,7 @@ Business or Tourist */}
                   <>
                     <Row className="row__container">
                       <p className="services">Conference Booking Details</p>
-                      <Col md={4}>
+                      <Col md={3}>
                         <div className="input__container">
                           <label>Area in Square Feet</label>
                           <Controller
@@ -4417,7 +4910,7 @@ Business or Tourist */}
                           />
                         </div>
                       </Col>
-                      <Col md={4}>
+                      <Col md={3}>
                         <div className="input__container">
                           <label>Area in Square Meters</label>
                           <Controller
@@ -4467,7 +4960,46 @@ Business or Tourist */}
                         <p>In Mt. Sq</p>
                         {areaInMeter}
                       </Col> */}
-                      <Col md={4}>
+
+                      <Col md={3}>
+                        <div className="input__container">
+                          <label htmlFor="noOfHalls">
+                            No of Halls{" "}
+                            <span className="required_field">*</span>
+                          </label>
+                          {/* <input
+                            type="text"
+                            id="noOfHalls"
+                            placeholder="Total Days"
+                            className="input-element"
+                            name="noOfHalls"
+                            {...register("noOfHalls", {
+                              required: "noOfHalls",
+                            })}
+                          /> */}
+                          <select
+                            id="noOfHalls"
+                            name="noOfHalls"
+                            className="input-element"
+                            {...register("noOfHalls", {
+                              required: "Select from list",
+                            })}>
+                            <option value="">--Select--</option>
+                            <option value="1">1 </option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="others">Others</option>
+                          </select>
+                          {errors.noOfHalls && (
+                            <span className="errorMsg">
+                              {errors.noOfHalls.message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+
+                      <Col md={3}>
                         <div className="input__container">
                           <label htmlFor="duration">
                             Duration <span className="required_field">*</span>
@@ -4497,18 +5029,24 @@ Business or Tourist */}
                             Set Up Date
                             <span className="required_field">*</span>
                           </label>
-                          <input
+                          <Controller
                             id="setUpDate"
                             name="setUpDate"
-                            type="date"
-                            className="input-element"
-                            {...register("setUpDate", {
-                              required: "Select Date",
-                            })}
+                            control={control}
+                            rules={{ required: "Setup Date is required" }}
+                            render={({ field }) => (
+                              <DatePicker
+                                selected={field.value}
+                                className="input-element"
+                                dateFormat="d MMMM, yyyy"
+                                placeholderText="Select Setup Date"
+                                onChange={(date) => field.onChange(date)}
+                              />
+                            )}
                           />
 
-                          {errors.setUpDate && (
-                            <span className="errorMsg">
+                          {!watchAllFields.setUpDate && errors.setUpDate && (
+                            <span style={{ color: "red" }}>
                               {errors.setUpDate.message}
                             </span>
                           )}
@@ -4521,21 +5059,35 @@ Business or Tourist */}
                             Conference Start Date
                             <span className="required_field">*</span>
                           </label>
-                          <input
+                          <Controller
                             id="conferenceStartDate"
                             name="conferenceStartDate"
-                            type="date"
-                            className="input-element"
-                            {...register("conferenceStartDate", {
-                              required: "Select Date",
-                            })}
+                            control={control}
+                            rules={{
+                              required: "Start Date is required",
+                              validate: (value) =>
+                                (value && (!setUpDate || value > setUpDate)) ||
+                                "Start date must be after setup date",
+                            }}
+                            render={({ field }) => (
+                              <DatePicker
+                                selected={field.value}
+                                className="input-element"
+                                conferenceStartDate={setUpDate}
+                                dateFormat="d MMMM, yyyy"
+                                placeholderText="Select Start Date"
+                                onChange={(date) => field.onChange(date)}
+                                minDate={setUpDate}
+                              />
+                            )}
                           />
 
-                          {errors.conferenceStartDate && (
-                            <span className="errorMsg">
-                              {errors.conferenceStartDate.message}
-                            </span>
-                          )}
+                          {!watchAllFields.conferenceStartDate &&
+                            errors.conferenceStartDate && (
+                              <span style={{ color: "red" }}>
+                                {errors.conferenceStartDate.message}
+                              </span>
+                            )}
                         </div>
                       </Col>
 
@@ -4545,19 +5097,39 @@ Business or Tourist */}
                             Conference End Date
                             <span className="required_field">*</span>
                           </label>
-                          <input
-                            id="setUpDate"
+
+                          <Controller
                             name="conferenceEndDate"
-                            type="date"
-                            className="input-element"
-                            {...register("conferenceEndDate", {
-                              required: "Select Date",
-                            })}
+                            control={control}
+                            rules={{
+                              required: "End Date is required",
+                              validate: (value) =>
+                                (value &&
+                                  (!conferenceStartDate ||
+                                    value > conferenceStartDate)) ||
+                                "End date must be after start date",
+                            }}
+                            render={({ field }) => (
+                              <DatePicker
+                                selected={field.value}
+                                className="input-element"
+                                placeholderText="Select End Date"
+                                dateFormat="d MMMM, yyyy"
+                                onChange={(date) => field.onChange(date)}
+                                minDate={conferenceStartDate}
+                              />
+                            )}
                           />
 
-                          {errors.conferenceEndDate && (
-                            <span className="errorMsg">
-                              {errors.conferenceEndDate.message}
+                          {!watchAllFields.conferenceEndDate &&
+                            errors.conferenceEndDate && (
+                              <span style={{ color: "red" }}>
+                                {errors.conferenceEndDate.message}
+                              </span>
+                            )}
+                          {dateErrorConference && (
+                            <span style={{ color: "red" }}>
+                              {dateErrorConference}
                             </span>
                           )}
                         </div>
@@ -4769,24 +5341,51 @@ Business or Tourist */}
                     ) : null}
                   </Row>
                 )}
-                {watchAllFields.duration &&
+
+                {watchAllFields.noOfHalls !== "others" &&
+                  watchAllFields.duration &&
                   watchAllFields.conferenceStartDate && (
                     <Row className="row__container">
-                      <p className="services">Conference Agenda</p>
+                      <p className="services mt-5">Conference Agenda</p>
                       <Row className="conf__agenda inin">
+                        <Col xs={1}>
+                          <p>Date</p>
+                        </Col>
                         <Col xs={1}>
                           <p>Day</p>
                         </Col>
-                        <Col xs={2}>
-                          <p>Date</p>
-                        </Col>
-                        <Col xs={2}>{/* <p>Day</p> */}</Col>
-                        <Col xs={2}>
+                        <Col xs={1}>
                           <p>Time</p>
                         </Col>
-                        <Col xs={5}>
-                          <p>Activity</p>
-                        </Col>
+                        {totalHall.map((item, index) => {
+                          return (
+                            <Col md={2}>
+                              <p>Hall {index + 1} </p>
+
+                              <div className="input__container">
+                                {/* <label htmlFor={`VenueName${index}`}>
+                                  Venue Name
+                                  <span className="required_field">*</span>
+                                </label> */}
+                                <input
+                                  type="text"
+                                  id="travelReasons"
+                                  className="input-element"
+                                  placeholder="Enter venue name"
+                                  name={`VenueName${index}`}
+                                  {...register(`VenueName${index}`, {
+                                    required: "Please enter Venue",
+                                  })}
+                                />
+                                {errors[`VenueName${index}`] && (
+                                  <span className="errorMsg">
+                                    {errors[`VenueName${index}`].message}
+                                  </span>
+                                )}
+                              </div>
+                            </Col>
+                          );
+                        })}
                       </Row>
                       {agenda__number.map((item, index) => {
                         if (!watchAllFields.conferenceStartDate) {
@@ -4798,6 +5397,8 @@ Business or Tourist */}
                         const dayName = new Intl.DateTimeFormat("en-US", {
                           weekday: "long",
                         }).format(newDate); // Get day name
+
+                        let firstThreeLetters = dayName.slice(0, 3);
 
                         const formattedDate = new Intl.DateTimeFormat(
                           "en-GB"
@@ -4811,60 +5412,185 @@ Business or Tourist */}
                         // }).format(newDate); // Get day name
 
                         return (
-                          <Row key={index}>
-                            <Col xs={1} className="conf__agenda">
+                          <Row key={index} className="mt-3">
+                            {/* <Col md={1} className="conf__agenda">
                               <p>{index + 1}</p>
-                            </Col>
-                            <Col xs={2} className="conf__agenda">
+                            </Col> */}
+                            <Col xs={1} className="conf__agenda">
                               <p>{formattedDate}</p>
                             </Col>
-                            <Col xs={2} className="conf__agenda">
-                              <p>{dayName}</p>
+                            <Col xs={1} className="conf__agenda">
+                              <p>({firstThreeLetters})</p>
                             </Col>
-                            <Col xs={2} className="conf__agenda">
-                              <input
-                                type="time"
-                                placeholder="Time"
-                                name={`ConferenceAgendaTime-${index}`}
-                                {...register(`ConferenceAgendaTime-${index}`, {
-                                  required: "Enter Time",
-                                })}
-                              />
+                            <Col xs={1} className="conf__agenda">
+                              <div className="input__container">
+                                <input
+                                  type="time"
+                                  placeholder="Time"
+                                  className="input-element"
+                                  name={`ConferenceAgendaTime-${index}`}
+                                  {...register(
+                                    `ConferenceAgendaTime-${index}`,
+                                    {
+                                      required: "Enter Time",
+                                    }
+                                  )}
+                                />
 
-                              {errors[`ConferenceAgendaTime-${index}`] && (
-                                <span className="errorMsg">
-                                  {
-                                    errors[`ConferenceAgendaTime-${index}`]
-                                      .message
-                                  }
-                                </span>
-                              )}
-                            </Col>
-                            <Col xs={5} className="conf__agenda">
-                              <input
-                                type="text"
-                                name={`ConferenceAgendaActivity-${index}`}
-                                placeholder="Enter your Activity"
-                                {...register(
-                                  `ConferenceAgendaActivity-${index}`,
-                                  {
-                                    required: "Enter your activity",
-                                  }
+                                {errors[`ConferenceAgendaTime-${index}`] && (
+                                  <span className="errorMsg">
+                                    {
+                                      errors[`ConferenceAgendaTime-${index}`]
+                                        .message
+                                    }
+                                  </span>
                                 )}
-                              />
-                              <br />
-                              {errors[`ConferenceAgendaActivity-${index}`] && (
-                                <span className="errorMsg">
-                                  {
-                                    errors[`ConferenceAgendaActivity-${index}`]
-                                      .message
-                                  }
-                                </span>
-                              )}
+
+                                {/* <Button
+                                  style={{ width: "50px" }}
+                                  size="sm"
+                                  variant="success"
+                                  className="mt-2">
+                                  +
+                                </Button> */}
+                              </div>
                             </Col>
+                            {totalHall.map((item, ind) => {
+                              return (
+                                <Col md={2} className="conf__agenda">
+                                  <div className="input__container">
+                                    <input
+                                      type="text"
+                                      className="input-element"
+                                      name={`ConferenceAgendaActivityHall${index}-${ind}`}
+                                      placeholder="Enter your Activity"
+                                      {...register(
+                                        `ConferenceAgendaActivityHall${index}-${ind}`,
+                                        {
+                                          required: "Enter your activity",
+                                        }
+                                      )}
+                                    />
+
+                                    {errors[
+                                      `ConferenceAgendaActivityHall${index}-${ind}`
+                                    ] && (
+                                      <span className="errorMsg">
+                                        {
+                                          errors[
+                                            `ConferenceAgendaActivityHall${index}-${ind}`
+                                          ].message
+                                        }
+                                      </span>
+                                    )}
+                                  </div>
+                                  {/* <Button
+                                    style={{ width: "50px" }}
+                                    size="sm"
+                                    variant="success"
+                                    className="mt-2">
+                                    +
+                                  </Button> */}
+                                </Col>
+                              );
+                            })}
                           </Row>
                         );
                       })}
+
+                      <Row className="row__container">
+                        <Col md={3} xs={6}>
+                          <div className="input__container">
+                            <a
+                              target="_blank"
+                              href="https://drive.google.com/drive/folders/1CPSOhxY67eZ45mns0SRC1j5rSJiIogns?usp=sharing">
+                              <Button size="sm" variant="success">
+                                Upload Other Docs
+                              </Button>
+                            </a>
+                          </div>
+                        </Col>
+                        <Col md={3} xs={6}>
+                          <div className="input__container">
+                            <a
+                              target="_blank"
+                              href="https://drive.google.com/drive/folders/1HuxbF_vSr4oeFCrwCYasYErL5nNPa6nC?usp=sharing">
+                              <Button size="sm" variant="success">
+                                Upload Floor Plan
+                              </Button>
+                            </a>
+                          </div>
+                        </Col>
+                      </Row>
+                    </Row>
+                  )}
+
+                {watchAllFields.noOfHalls == "others" && (
+                  <Row className="row__container">
+                    <p className="services">Conference Agenda</p>
+                    <Col md={3} xs={4}>
+                      <div className="input__container">
+                        <a
+                          target="_blank"
+                          href="https://drive.google.com/drive/folders/1Qa0IQ1Ny04p6DdFp6bGXvxy0kue5ZkWh?usp=sharing">
+                          <Button size="sm" variant="success">
+                            Upload Hall details
+                          </Button>
+                        </a>
+                      </div>
+                    </Col>
+                    <Col md={3} xs={6}>
+                      <div className="input__container">
+                        <a
+                          target="_blank"
+                          href="https://drive.google.com/drive/folders/1CPSOhxY67eZ45mns0SRC1j5rSJiIogns?usp=sharing">
+                          <Button size="sm" variant="success">
+                            Upload Other Docs
+                          </Button>
+                        </a>
+                      </div>
+                    </Col>
+                    <Col md={3} xs={6}>
+                      <div className="input__container">
+                        <a
+                          target="_blank"
+                          href="https://drive.google.com/drive/folders/1HuxbF_vSr4oeFCrwCYasYErL5nNPa6nC?usp=sharing">
+                          <Button size="sm" variant="success">
+                            Upload Floor Plan
+                          </Button>
+                        </a>
+                      </div>
+                    </Col>
+                    <Col md={3} xs={6}></Col>
+                  </Row>
+                )}
+                {watchAllFields.conferenceHall == "Yes" &&
+                  watchAllFields.duration &&
+                  watchAllFields.noOfHalls &&
+                  watchAllFields.conferenceStartDate && (
+                    <Row className="row__container">
+                      <Col md={3}>
+                        <div className="input__container">
+                          <label htmlFor="floorPlanLink">
+                            Insert floor plan link
+                          </label>
+                          <input
+                            type="text"
+                            id="floorPlanLink"
+                            className="input-element"
+                            placeholder="Insert your link"
+                            name="floorPlanLink"
+                            {...register("floorPlanLink", {
+                              required: "Please insert your link",
+                            })}
+                          />
+                          {errors.floorPlanLink && (
+                            <span className="errorMsg">
+                              {errors.floorPlanLink.message}
+                            </span>
+                          )}
+                        </div>
+                      </Col>
                     </Row>
                   )}
 
@@ -5093,7 +5819,7 @@ Business or Tourist */}
                               name="totalFullDaysSightSeeing"
                               className="input__text"
                               {...register("totalFullDaysSightSeeing")}
-                              placeholder="Specify"
+                              placeholder="Tot. Days"
                             />
                           </>
                           {/* <input
@@ -5209,6 +5935,7 @@ Business or Tourist */}
                       <label style={{ marginLeft: "5px", color: "black" }}>
                         Specify
                       </label>
+
                       {watchAllFields.Specify == true && (
                         <>
                           <input
@@ -5575,7 +6302,7 @@ state-1
                 animation="grow"
                 size="md"
                 className="loading_symbol"
-                variant="light"
+                variant="danger"
               />
             )}
           </form>
@@ -5602,7 +6329,6 @@ state-1
           </a>
         </p>
       </footer>
-      <Container />
     </>
   );
 };

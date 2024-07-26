@@ -6,12 +6,12 @@
 }
 
 .form__main {
-  margin-top: 8%;
+  margin-top: 5%;
   margin-bottom: 8%;
   /* width: %; */
-  background: rgba(0, 0, 0, 0.5);
+  /* background: rgba(0, 0, 0, 0.5); */
   /* background-color: rgb(245, 245, 245); */
-  padding: 60px 40px;
+  /* padding: 60px 40px; */
   /* box-shadow: rgba(0, 0, 0, 0.17) 0px -23px 25px 0px inset,
     rgba(0, 0, 0, 0.15) 0px -36px 30px 0px inset,
     rgba(0, 0, 0, 0.1) 0px -79px 40px 0px inset, rgba(0, 0, 0, 0.06) 0px 2px 1px,
@@ -21,22 +21,22 @@
     rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px,
     rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px; */
 
-  border-radius: 10px;
+  /* border-radius: 10px; */
 }
 main {
-  background: linear-gradient(rgba(31, 21, 180, 0.6), rgba(172, 24, 140, 0.2)),
-    url(./assets/Img/pexels-julius-silver-753626.jpg);
+  /* background: linear-gradient(rgba(31, 21, 180, 0.6), rgba(172, 24, 140, 0.2)),
+    url(./assets/Img/pexels-julius-silver-753626.jpg); */
   /* background: url(./assets/Img/pexels-julius-silver-753626.jpg); */
 
-  background-size: cover;
+  /* background-size: cover;
   background-position: bottom;
   background-attachment: fixed;
-  background-position: left;
+  background-position: left; */
 }
 
 .services {
-  color: white !important;
-  /* color: rgb(53, 71, 230); */
+  /* color: white ; */
+  color: black;
   font-weight: bold;
   text-decoration: underline;
   padding-top: 10px;
@@ -44,18 +44,20 @@ main {
 }
 
 .room_reservation_text {
-  text-decoration: underline;
   font-weight: bold;
   font-family: Arial, Helvetica, sans-serif;
   text-align: center;
-  font-size: 24px;
-  /* color: rgb(53, 71, 230); */
-  color: white;
+  font-size: 28px;
+  text-decoration: underline;
+  color: black;
+  margin-bottom: 4%;
+
+  /* color: white; */
   margin-bottom: 50px;
 }
 .submit_btn {
   /* background-color: rgb(11, 26, 162); */
-  background-color: rgb(53, 71, 230);
+  background-color: rgb(255, 77, 77);
   color: white;
   margin-top: 40px;
   padding: 8px 15px;
@@ -67,14 +69,18 @@ main {
   ba
   color: rgb(11, 26, 162); */
 }
+.selectFirst {
+  color: #ccc;
+}
 .inin {
   font-weight: bold;
+  margin-top: 20px;
 }
 
 header {
-  color: #ffffff;
+  /* color: #ffffff;
   min-height: 70px;
-  background: linear-gradient(45deg, #00ccdf 0, #4d0ce8 100%);
+  background: linear-gradient(45deg, #00ccdf 0, #4d0ce8 100%); */
   /* background-color: rgb(53, 71, 230); */
   border-bottom: 2px solid red;
 }
@@ -83,7 +89,7 @@ header {
   flex-direction: column;
 }
 .row__container {
-  margin-top: 25px;
+  margin-top: 35px;
 }
 
 .required_field {
@@ -100,9 +106,9 @@ header {
   margin-left: 10px;
 }
 label {
-  font-size: 14px;
-  color: white !important;
-  /* color: rgb(97, 97, 97); */
+  font-size: 16px;
+  /* color: white !important; */
+  color: rgb(97, 97, 97);
 }
 input::placeholder {
   font-size: 14px;
@@ -131,43 +137,45 @@ input::placeholder {
   border-radius: 4px;
 }
 .sheetLink {
-  color: white;
+  color: rgb(97, 97, 97);
   font-weight: bold;
   text-decoration: none;
 }
 
 .sheetLink:hover {
-  color: white;
-
+  color: rgb(97, 97, 97);
   text-decoration: underline;
 }
 footer {
-  text-align: center;
   padding: 30px 20px 20px 20px;
-  background: linear-gradient(45deg, #00ccdf 0, #4d0ce8 100%);
+  color: black;
+
+  /* background: linear-gradient(45deg, #00ccdf 0, #4d0ce8 100%); */
   border-top: 2px solid red;
-  color: white;
 }
 footer > h3 {
   font-family: Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  font-size: 24px;
   /* text-decoration: underline; */
 }
 .contact {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 22px;
-  margin-top: 15px;
+  font-size: 20px;
+  font-weight: bold;
+  /* margin-top: 15px; */
 }
 .same > span {
   font-family: Arial, Helvetica, sans-serif;
+  color: black;
   /* font-family: "Merienda One", cursive; */
 }
 .same > a {
-  color: white;
   text-decoration: none;
-  padding-left: 10px;
+  color: rgb(97, 97, 97);
 }
 .conf__agenda {
-  color: white;
+  color: rgb(97, 97, 97);
 }
 .loading_symbol {
   position: relative;
@@ -176,7 +184,7 @@ footer > h3 {
 }
 @media (max-width: 765px) {
   .form__main {
-    width: 90%;
+    width: 95%;
   }
   .room_reservation_text {
     font-size: 20px;
