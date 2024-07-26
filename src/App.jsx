@@ -1371,6 +1371,7 @@ const App = () => {
     //   });
 
     setLoading(true);
+    // Sheet.Best
     axios
       .post(import.meta.env.VITE_BOOKING_REQUEST, googleSheetData)
       .then((response) => {
@@ -1399,7 +1400,7 @@ const App = () => {
       });
 
     // sheetbd;
-    // fetch("https://sheetdb.io/api/v1/3ngq0w1cm5feb", {
+    // fetch(import.meta.env.VITE_BOOKING_REQUESTDB, {
     //   method: "POST",
     //   headers: {
     //     Accept: "application/json",
@@ -1409,21 +1410,11 @@ const App = () => {
     //     data: [googleSheetData],
     //   }),
     // })
-    //   .then((response) => response.json())
-    //   .then((data) => console.log(data));
-
-    // fetch(import.meta.env.VITE_BOOKING_REQUEST, {
-    //   method: "POST",
-    //   mode: "cors",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify(googleSheetData),
-    // })
-    //   .then((r) => r.json())
-    //   .then((googleSheetData) => {
-    //     // The response comes here
-    //     console.log(googleSheetData);
+    //   .then((response) => {
+    //     response.json();
+    //   })
+    //   .then((data) => {
+    //     console.log(data);
     //     MySwal.fire({
     //       icon: "success",
     //       title:
@@ -1431,7 +1422,7 @@ const App = () => {
     //     });
     //     setTimeout(() => {
     //       setLoading(false);
-    //       // reset();
+    //       reset();
     //     }, 1000);
     //   })
     //   .catch((error) => {
@@ -1443,47 +1434,10 @@ const App = () => {
     //     console.error("Error fetching data:", error);
     //     setTimeout(() => {
     //       setLoading(false);
-    //       // reset();
+    //       reset();
     //     }, 1000 * 2);
-    //     // Errors are reported there
-    //     console.log(error);
+    //     console.error("Error:", error);
     //   });
-
-    // if (data.groupType == "Individual" && data.visaRequirement) {
-    //   const countryFit = data.groupsFit.map((item) => item.value).join(", ");
-    //   googleSheetData.countryFit = countryFit;
-    // }
-
-    // if (data.groupType == "group" && data.visaRequirement) {
-    //   rows.map((item, index) => {
-    //     let number = index.toString();
-    //     let totalPax = "totalPaxGit" + number;
-    //     let totalday = "totalDayGit" + number;
-    //     let remarks = "GitRemarks" + number;
-    //     let cityGitVisa = "cityGitVisa" + number;
-    //     let visaCountry = data[`visaApplyFrom${index}`]
-    //       .map((item) => item.value)
-    //       .join(", ");
-
-    //     googleSheetData[totalPax] = data[`totlaPaxGit${index}`].name;
-    //     googleSheetData[totalday] = data[`gitVisaDays${index}`].name;
-    //     googleSheetData[remarks] = data[`Remarks${index}`].name;
-    //     googleSheetData[cityGitVisa] = visaCountry;
-    //   });
-    // }
-
-    // if (data.conferenceHall == "Yes") {
-    //   for (let i = 0; i < data.duration; i++) {
-    //     let index = i.toString();
-    //     let conferenceTime = "conferenceTime" + index;
-    //     let conferenceActivity = "conferenceActivity" + index;
-    //     googleSheetData[conferenceTime] = data[`ConferenceAgendaTime-${i}`];
-    //     googleSheetData[conferenceActivity] =
-    //       data[`ConferenceAgendaActivity-${i}`];
-    //   }
-    // }
-
-    // console.log(googleSheetData, "hello here is my data");
   };
 
   return (
