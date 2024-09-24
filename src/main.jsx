@@ -11,20 +11,49 @@ import Date from "./date.jsx";
 import III from "./III.jsx";
 import App from "./App.jsx";
 import DateComponent from "./ThreeDate.jsx";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import GetQuatation from "./Component/GetQuatation.jsx";
+import { FormProvider } from "./FormContext"; // Import the provider
+import LandQuatation from "./Component/LandQuatation.jsx";
+import VisaQuatation from "./Component/VisaQuatation.jsx";
+import EventQuatation from "./Component/EventQuatation.jsx";
+import HotelQuatation from "./Component/HotelQuatation.jsx";
 
-// import Apps from "./Apps.jsx";
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,
+  },
+
+  {
+    path: "/get-quatation/",
+    element: <GetQuatation />,
+  },
+
+  {
+    path: "/Hotel-quatation/",
+    element: <HotelQuatation />,
+  },
+
+  {
+    path: "/Land-quatation/",
+    element: <LandQuatation />,
+  },
+  {
+    path: "/Visa-quatation/",
+    element: <VisaQuatation />,
+  },
+
+  {
+    path: "/Event-quatation/",
+    element: <EventQuatation />,
+  },
+]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    {/* <App /> */}
-    {/* <AreaConverter /> */}
-    <App />
-    {/* <III /> */}
-    {/* <Date /> */}
-    {/* <DateComponent /> */}
-    {/* <Hello /> */}
-    {/* <Try /> */}
-    {/* <Isdo /> */}
-    {/* <Iksdo /> */}
+    <FormProvider>
+      <RouterProvider router={router} />
+    </FormProvider>
   </React.StrictMode>
 );

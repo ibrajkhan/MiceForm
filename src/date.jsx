@@ -114,7 +114,6 @@ function Date() {
           <span style={{ color: "red" }}>{errors.endDate.message}</span>
         )}
       </div>
-
       <div>
         <label>Total Days</label>
         <br />

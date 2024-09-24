@@ -1,0 +1,22 @@
+.Dataint {
+  /* border: 1px solid gray; */
+  padding: 20px 30px;
+}
+.table-responsive-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+table {
+  min-width: 600px; /* Adjust based on the number of columns */
+}
+
+.table-responsive-wrapper {
+  overflow-x: scroll;
+  scrollbar-width: none; /* For Firefox */
+  -ms-overflow-style: none; /* For IE and Edge */
+}
+
+.table-responsive-wrapper::-webkit-scrollbar {
+  display: none; /* For Chrome, Safari, and Opera */
+}
